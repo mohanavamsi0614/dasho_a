@@ -47,8 +47,8 @@ if (loading) {
       <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>}/>
       <Route path='/qr' element={<ProtectedRoute><QRForm/></ProtectedRoute>}/>
       <Route path='/hackthon' element={<ProtectedRoute><HackthonForm/></ProtectedRoute>} />
-      <Route path='/qr/scanner/:event' element={<ProtectedRoute><QRScanner/></ProtectedRoute>} />
-      <Route path='/dashboard/qr/:event' element={<ProtectedRoute><QrDashboard/></ProtectedRoute>} />
+      <Route path='/qr/scanner/:event' element={<QRScanner/>} />
+      <Route path='/dashboard/qr/:event' element={<QrDashboard/>} />
       <Route path='/dashboard/hack/:event' element={<ProtectedRoute><HackDashboard/></ProtectedRoute>} />
       <Route path='/attd/:event' element={<ProtectedRoute><Attd/></ProtectedRoute>} />
          <Route path="*" element={<Navigate to="/" replace />} />
