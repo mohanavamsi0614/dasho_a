@@ -131,8 +131,8 @@ const QRScanner = () => {
               Student Verified
             </h3>
             <InfoRow label="Name" value={qrResult.name} />
-            <InfoRow label="Slip Number" value={qrResult.regnumber} />
-            <InfoRow label="Phone" value={qrResult.phonenumber} />
+            <InfoRow label="Reg No." value={qrResult.rollNumber} />
+            <InfoRow label="Phone" value={qrResult.phoneNumber} />
 
             <div className="flex gap-3 mt-5">
               <button
