@@ -69,7 +69,7 @@ const QRScanner = () => {
       await axios.post(`https://dasho-backend.onrender.com/admin/event/qr/${event}`, {
         userId: qrResult._id,
         status: type,
-        time: new Date().getTime(),
+        time: new Date().getHours() + ":" + new Date().getMinutes(),
       });
       setStatus(type);
       setQrResult("");
