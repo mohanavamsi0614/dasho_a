@@ -34,14 +34,14 @@ function QrDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-gray-300 flex justify-center items-center">
+      <div className="min-h-screen bg-[#212121] text-gray-300 flex justify-center items-center">
         <p>Loading event details...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-gray-200 px-6 py-10">
+    <div className="min-h-screen font-poppins bg-[#212121]  text-gray-200 px-6 py-10">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
