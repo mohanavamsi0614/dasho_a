@@ -3,7 +3,7 @@ import Google from "./firebase";
 
 function Auth() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen font-poppins bg-[#212121] flex items-center justify-center">
       <Google />
     </div>
   );

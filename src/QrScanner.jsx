@@ -95,7 +95,7 @@ const QRScanner = () => {
   );
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center text-[#ECE8E7] p-4">
+    <div className="min-h-screen bg-[#212121] font-poppins flex flex-col items-center justify-center text-[#ECE8E7] p-4">
       <div className="bg-[#121212] border border-[#919294] rounded-2xl shadow-lg p-6 w-full max-w-md text-center">
         <h2 className="text-2xl font-bold mb-6 text-[#E16254]">
           Student Verification

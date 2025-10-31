@@ -29,7 +29,7 @@ function QrDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-[#ECE8E7] p-8">
+    <div className="min-h-screen font-poppins bg-[#212121] text-[#ECE8E7] p-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-8 border-b border-[#919294] pb-4">
         <h1 className="text-3xl font-bold tracking-wide">
