@@ -48,16 +48,68 @@ function QrDashboard() {
           <h1 className="text-3xl font-semibold text-white">
             {eventData.event?.eventTitle || "QR Event Dashboard"}
           </h1>
-          <button
-            onClick={toggleStatus}
-            className={`px-5 py-2 rounded-lg font-medium transition-all duration-200 ${
-              eventData.event?.status
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-green-600 hover:bg-green-700"
-            }`}
-          >
-            {eventData.event?.status ? "Close Event" : "Open Event"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={toggleStatus}
+              className={`px-5 py-2 rounded-lg font-medium transition-all duration-200 ${
+                eventData.event?.status
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-green-600 hover:bg-green-700"
+              }`}
+            >
+              {eventData.event?.status ? "Close Event" : "Open Event"}
+            </button>
+
+            <button
+              onClick={() => {
+                // download CSV
+                const items = eventData.event_og || [];
+                if (!items.length) {
+                  alert('No participants to export');
+                  return;
+                }
+                // build header set
+                const headersSet = new Set();
+                items.forEach(it => {
+                  Object.keys(it || {}).forEach(k => headersSet.add(k));
+                });
+                // prefer ordering for common fields
+                const preferred = ['name','collage','year','branch','rollnumber','email','phone','checkin','checkout'];
+                const headers = [];
+                preferred.forEach(h => { if (headersSet.has(h)) { headers.push(h); headersSet.delete(h); } });
+                // remaining headers
+                Array.from(headersSet).sort().forEach(h => headers.push(h));
+
+                const rows = items.map(it => {
+                  return headers.map(h => {
+                    let v = it[h];
+                    if (Array.isArray(v)) v = v.join(' | ');
+                    if (v === null || v === undefined) v = '';
+                    // escape quotes
+                    return String(v).replace(/"/g, '""');
+                  });
+                });
+
+                const csvLines = [];
+                csvLines.push(headers.map(h => `"${h}"`).join(','));
+                rows.forEach(r => csvLines.push(r.map(c => `"${c}"`).join(',')));
+                const csv = csvLines.join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const safeTitle = (eventData.event?.eventTitle || 'event').replace(/[^a-z0-9\-_]/gi, '_');
+                a.download = `${safeTitle}_participants.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+              }}
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white"
+            >
+              Download CSV
+            </button>
+          </div>
         </div>
 
         {/* Summary Info */}
