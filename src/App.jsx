@@ -10,6 +10,7 @@ import QrDashboard from './QrDashboard'
 import HackDashboard from './HackDashboard'
 import Attd from './Attd'
 import { useEffect, useState } from 'react'
+import HackAttd from './HackAttd'
 
 
 function ProtectedRoute({ children }) {
@@ -51,6 +52,7 @@ if (loading) {
       <Route path='/dashboard/qr/:event' element={<QrDashboard/>} />
       <Route path='/dashboard/hack/:event' element={<ProtectedRoute><HackDashboard/></ProtectedRoute>} />
       <Route path='/attd/:event' element={<ProtectedRoute><Attd/></ProtectedRoute>} />
+      <Route path='/attd/hack/:event' element={<ProtectedRoute><HackAttd/></ProtectedRoute>} />
          <Route path="*" element={<Navigate to="/" replace />} />
 
     </Routes>

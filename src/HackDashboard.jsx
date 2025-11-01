@@ -130,9 +130,9 @@ function HackDashboard() {
                     <td className="p-3">{team.lead.phone}</td>
                     <td className="p-3">{team.lead.rollNumber}</td>
                     <td className="p-3">{team.lead.college}</td>
-                    <td className="p-3">{team.lead["Attd-1"] || "-"}</td>
-                    <td className="p-3">{team.lead["Attd-2"] || "-"}</td>
-                    <td className="p-3">{team.lead["Attd-3"] || "-"}</td>
+                    <td className="p-3">{team.lead["Attd-1"] || "P"}</td>
+                    <td className="p-3">{team.lead["Attd-2"] || "P"}</td>
+                    <td className="p-3">{team.lead["Attd-3"] || "P"}</td>
                   </tr>
 
                   {team.members.map((m, i) => (
@@ -147,9 +147,9 @@ function HackDashboard() {
                       <td className="p-3">{m.phone}</td>
                       <td className="p-3">{m.rollNumber}</td>
                       <td className="p-3">{m.college}</td>
-                      <td className="p-3">{m["Attd-1"] || "-"}</td>
-                      <td className="p-3">{m["Attd-2"] || "-"}</td>
-                      <td className="p-3">{m["Attd-3"] || "-"}</td>
+                      <td className="p-3">{m["Attd-1"] || "P"}</td>
+                      <td className="p-3">{m["Attd-2"] || "P"}</td>
+                      <td className="p-3">{m["Attd-3"] || "P"}</td>
                     </tr>
                   ))}
                 </>

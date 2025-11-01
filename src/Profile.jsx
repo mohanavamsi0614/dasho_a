@@ -155,7 +155,7 @@ function Profile() {
                     ) : (
                       <>
                         <button
-                          onClick={() => nav(`/attd/${event._id.$oid || event._id}`)}
+                          onClick={() => nav(`/attd/hack/${event._id.$oid || event._id}`)}
                           className="px-3 py-2 bg-red-500 hover:bg-red-600 rounded-md text-white text-sm"
                         >
                           Attendance
