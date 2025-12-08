@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
-import axios from "axios";
+import api from "../lib/api";
 import { useParams } from "react-router";
 
 const QRScanner = () => {
@@ -46,7 +46,7 @@ const QRScanner = () => {
 
       if (code) {
         setLoading(true);
-        axios
+        api
           .get(code.data)
           .then((res) => {
             setQrResult(res.data.user);
@@ -67,7 +67,7 @@ const QRScanner = () => {
   const handleCheck = async (type) => {
     setLoading(true);
     try {
-      await axios.post(`http://localhost:6100/admin/event/qr/${event}`, {
+      await api.post(`/admin/event/qr/${event}`, {
         userId: qrResult._id,
         status: type,
         time: new Date().getHours() + ":" + new Date().getMinutes(),

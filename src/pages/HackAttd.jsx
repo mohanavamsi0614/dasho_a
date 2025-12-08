@@ -1,5 +1,5 @@
 import socket from "@/lib/socket";
-import axios from "axios";
+import api from "../lib/api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
@@ -16,7 +16,7 @@ function HackAttd() {
   }, [event]);
 
   const fetchData = () => {
-    axios.get("http://localhost:6100/admin/event/" + event).then((res) => {
+    api.get("/admin/event/" + event).then((res) => {
       setEventData(res.data.event);
       setTeams(res.data.event_og);
       setActiveAttd(res.data.event.currAttd)
@@ -28,8 +28,8 @@ function HackAttd() {
   };
 
   const handleCreateAttd = () => {
-    axios
-      .post("http://localhost:6100/admin/hack/attd/create/" + event)
+    api
+      .post("/admin/hack/attd/create/" + event)
       .then((res) => {
         setEventData(res.data.event);
         const newSessions = res.data.event.attd;
@@ -48,8 +48,8 @@ function HackAttd() {
       return
     }
     try {
-      // await axios.post(
-      //   `http://localhost:6100/admin/hack/attd/${event}/${team._id}`,
+      // await api.post(
+      //   `/admin/hack/attd/${event}/${team._id}`,
       //   {
       //     lead: team.lead,
       //     members: team.members,
@@ -259,8 +259,8 @@ function MemberCard({ member, isLead, sessions, currAttd, teamId, eventId, teamD
 
     // Send to Backend
     try {
-      await axios.post(
-        `http://localhost:6100/admin/hack/attd/${eventId}/${teamId}`,
+      await api.post(
+        `/admin/hack/attd/${eventId}/${teamId}`,
         {
           lead: updatedTeam.lead,
           members: updatedTeam.members,

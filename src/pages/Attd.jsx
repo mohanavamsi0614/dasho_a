@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../lib/api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
@@ -7,8 +7,8 @@ function QrDashboard() {
   const [eventData, setEventData] = useState({});
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:6100/admin/event/${event}`)
+    api
+      .get(`/admin/event/${event}`)
       .then((res) => {
         setEventData(res.data);
         console.log(res.data);
@@ -18,8 +18,8 @@ function QrDashboard() {
 
   const toggleStatus = async () => {
     try {
-      const res = await axios.post(
-        `http://localhost:6100/admin/event/status/${event}`,
+      const res = await api.post(
+        `/admin/event/status/${event}`,
         { status: !eventData.event?.status }
       );
       setEventData(res.data);
@@ -37,11 +37,10 @@ function QrDashboard() {
         </h1>
         <button
           onClick={toggleStatus}
-          className={`px-5 py-2 rounded-xl text-white font-semibold shadow-md transition-all duration-300 ${
-            eventData.event?.status
+          className={`px-5 py-2 rounded-xl text-white font-semibold shadow-md transition-all duration-300 ${eventData.event?.status
               ? "bg-[#E16254] hover:bg-red-700"
               : "bg-green-600 hover:bg-green-700"
-          }`}
+            }`}
         >
           {eventData.event?.status ? "Close Event" : "Open Event"}
         </button>

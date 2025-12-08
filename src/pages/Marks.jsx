@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useParams } from "react-router"
-import axios from "axios"
+import api from "../lib/api"
 
 function Marks() {
     const eventId = useParams().event
@@ -14,7 +14,7 @@ function Marks() {
     const [marks, setmarks] = useState([])
 
     useEffect(() => {
-        axios.get("http://localhost:6100/admin/event/" + eventId).then((res) => {
+        api.get("/admin/event/" + eventId).then((res) => {
             setevent(res.data.event)
             setteams(res.data.event_og)
             setteam(teams[0] || {})
@@ -42,7 +42,7 @@ function Marks() {
         setRounds((prev) => prev.filter((r) => r.name !== round.name))
     }
     const handelSubmit = () => {
-        axios.post("http://localhost:6100/admin/marks/" + eventId + "/" + team._id, { marks: { ...marks, name: round.name } }).then((res) => {
+        api.post("/admin/marks/" + eventId + "/" + team._id, { marks: { ...marks, name: round.name } }).then((res) => {
             setmarks({})
             console.log(res.data)
         })
@@ -190,7 +190,7 @@ function Popup({ setRound, setClose, rounds, eventId }) {
 
     const handelcreateround = () => {
         const newRound = { name: roundName, catogary, total: catogary.reduce((total, cat) => total + Number(cat.marks), 0) }
-        axios.post("http://localhost:6100/admin/hackthon/round/create/" + eventId, { round: newRound }).then((res) => {
+        api.post("/admin/hackthon/round/create/" + eventId, { round: newRound }).then((res) => {
             console.log(res.data)
         })
         setRound([...rounds, newRound])

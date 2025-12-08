@@ -1,5 +1,5 @@
 import PaymentCard from "@/components/PaymentCard"
-import axios from "axios"
+import api from "../lib/api"
 import { useEffect, useState } from "react"
 import { useParams } from "react-router"
 
@@ -9,7 +9,7 @@ function Payment() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        axios.get("http://localhost:6100/admin/event/" + event).then((res) => {
+        api.get("/admin/event/" + event).then((res) => {
             console.log(res.data)
             setTeams(res.data.event_og || [])
             setLoading(false)

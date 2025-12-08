@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../lib/api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import socket from "@/lib/socket";
@@ -8,8 +8,8 @@ function QrDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:6100/admin/event/${event}`)
+    api
+      .get(`/admin/event/${event}`)
       .then((res) => {
         setEventData(res.data);
         setLoading(false);

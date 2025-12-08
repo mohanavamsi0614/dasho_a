@@ -1,7 +1,7 @@
 /* global cloudinary */
 /* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 
 function HackthonForm() {
@@ -97,7 +97,7 @@ function HackthonForm() {
     const payload = { ...data, type: 'hackathon', orgId: JSON.parse(localStorage.getItem('user'))._id };
 
     try {
-      const res = await axios.post('http://localhost:6100/admin/event', payload);
+      const res = await api.post('/admin/event', payload);
       localStorage.setItem("user", JSON.stringify(res.data.org));
       localStorage.removeItem('hackathonDraft');
       nav('/profile');

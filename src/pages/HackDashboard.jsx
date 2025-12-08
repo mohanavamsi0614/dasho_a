@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../lib/api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { saveAs } from "file-saver";
@@ -9,8 +9,8 @@ function HackDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:6100/admin/event/" + event)
+    api
+      .get("/admin/event/" + event)
       .then((res) => {
         setEventData(res.data);
         console.log(res.data)

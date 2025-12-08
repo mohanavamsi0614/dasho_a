@@ -1,6 +1,6 @@
 /* global cloudinary */
 // firebase.jsx
-import axios from "axios";
+import api from "./api";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useEffect, useRef, useState } from "react";
@@ -77,8 +77,8 @@ function Google() {
   const provider = new GoogleAuthProvider();
 
   const reg = () => {
-    axios
-      .post("http://localhost:6100/admin/register", data)
+    api
+      .post("/admin/register", data)
       .then((res) => {
         localStorage.setItem("user", JSON.stringify(res.data.org));
         nav("/profile");
@@ -90,8 +90,8 @@ function Google() {
     signInWithPopup(auth, provider)
       .then((result) => {
         const user = result.user;
-        axios
-          .post("http://localhost:6100/admin/auth", { email: user.email })
+        api
+          .post("/admin/auth", { email: user.email })
           .then((res) => {
             if (res.data.newOrg) setNewOrg(true);
             else {

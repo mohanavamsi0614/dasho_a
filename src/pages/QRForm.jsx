@@ -1,7 +1,7 @@
 /* global cloudinary */
 /* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import api from "../lib/api";
 import { useNavigate } from "react-router-dom";
 
 function QRForm() {
@@ -119,7 +119,7 @@ function QRForm() {
     };
 
     try {
-      const res = await axios.post("http://localhost:6100/admin/event", payload);
+      const res = await api.post("/admin/event", payload);
       if (res.data.org)
         localStorage.setItem("user", JSON.stringify(res.data.org));
       nav("/profile");

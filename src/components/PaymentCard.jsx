@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import axios from "axios"
+import api from "../lib/api"
 import { useState } from "react"
 
 function PaymentCard({ team, eventId }) {
@@ -10,7 +10,7 @@ function PaymentCard({ team, eventId }) {
         setVerifying(true)
         const members = team.members.map((member) => member.email)
         members.push(team.lead.email)
-        axios.post("http://localhost:6100/admin/payment/hackthon/verify/" + eventId + "/" + team._id, { teamName: team.teamName, members: members })
+        api.post("/admin/payment/hackthon/verify/" + eventId + "/" + team._id, { teamName: team.teamName, members: members })
             .then((res) => {
                 console.log(res.data)
                 setVerified(true)
