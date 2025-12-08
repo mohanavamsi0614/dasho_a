@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { saveAs } from "file-saver";
-
+import socket from "@/lib/socket";
 function HackDashboard() {
   const { event } = useParams();
   const [eventData, setEventData] = useState(null);
@@ -10,16 +10,45 @@ function HackDashboard() {
 
   useEffect(() => {
     axios
-      .get("https://dasho-backend.onrender.com/admin/event/" + event)
+      .get("http://localhost:6100/admin/event/" + event)
       .then((res) => {
         setEventData(res.data);
+        console.log(res.data)
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
         setLoading(false);
       });
+    socket.emit("join", event)
+
   }, [event]);
+
+  const openEvent = async () => {
+    socket.emit("openEvent", event)
+  }
+
+  const closeEvent = async () => {
+    socket.emit("closeEvent", event)
+  }
+  const onOpen = () => {
+    console.log(eventData)
+    setEventData((prev) => {
+      if (!prev) return prev;
+      return { ...prev, event: { ...prev.event, status: "open" } };
+    });
+  };
+
+  const onClosed = () => {
+    console.log(eventData)
+    setEventData((prev) => {
+      if (!prev) return prev;
+      return { ...prev, event: { ...prev.event, status: "closed" } };
+    });
+  };
+
+  socket.on("eventOpen", onOpen);
+  socket.on("eventClosed", onClosed);
 
   const downloadCSV = () => {
     if (!eventData || !eventData.event_og) return;
@@ -83,13 +112,25 @@ function HackDashboard() {
     <div className="min-h-screen font-poppins bg-[#212121] text-white p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">Hackathon Dashboard</h1>
-        <button
-          onClick={downloadCSV}
-          className="bg-[#E16254] hover:bg-[#c65248] text-white px-6 py-2 rounded-xl shadow-md transition-all duration-300"
-        >
-          Download CSV
-        </button>
+        <div className="flex gap-4">
+          <button
+            onClick={eventData?.event?.status == "open" ? closeEvent : openEvent}
+            className={`px-6 py-2 rounded-xl font-medium shadow-md transition-all duration-300 ${eventData?.event?.status == "open"
+              ? "bg-red-600 hover:bg-red-700 text-white"
+              : "bg-green-600 hover:bg-green-700 text-white"
+              }`}
+          >
+            {eventData?.event?.status == "open" ? "Close Event" : "Open Event"}
+          </button>
+          <button
+            onClick={downloadCSV}
+            className="bg-[#E16254] hover:bg-[#c65248] text-white px-6 py-2 rounded-xl shadow-md transition-all duration-300"
+          >
+            Download CSV
+          </button>
+        </div>
       </div>
+
 
       {eventData && eventData.event_og.length > 0 ? (
         <div className="overflow-x-auto bg-[#111111] border border-gray-700 rounded-2xl shadow-lg">

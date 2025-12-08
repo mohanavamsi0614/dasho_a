@@ -1,3 +1,4 @@
+/* global cloudinary */
 // firebase.jsx
 import axios from "axios";
 import { initializeApp } from "firebase/app";
@@ -32,7 +33,27 @@ function Google() {
     contactPhone: "",
     description: "",
     imgUrl: "",
+    links: [],
   });
+
+  const [currentLink, setCurrentLink] = useState({ title: "", url: "" });
+
+  const addLink = () => {
+    if (currentLink.title && currentLink.url) {
+      setData((prev) => ({
+        ...prev,
+        links: [...(prev.links || []), currentLink],
+      }));
+      setCurrentLink({ title: "", url: "" });
+    }
+  };
+
+  const removeLink = (index) => {
+    setData((prev) => ({
+      ...prev,
+      links: prev.links.filter((_, i) => i !== index),
+    }));
+  };
 
   useEffect(() => {
     if (typeof cloudinary === "undefined") return;
@@ -57,7 +78,7 @@ function Google() {
 
   const reg = () => {
     axios
-      .post("https://dasho-backend.onrender.com/admin/register", data)
+      .post("http://localhost:6100/admin/register", data)
       .then((res) => {
         localStorage.setItem("user", JSON.stringify(res.data.org));
         nav("/profile");
@@ -70,7 +91,7 @@ function Google() {
       .then((result) => {
         const user = result.user;
         axios
-          .post("https://dasho-backend.onrender.com/admin/auth", { email: user.email })
+          .post("http://localhost:6100/admin/auth", { email: user.email })
           .then((res) => {
             if (res.data.newOrg) setNewOrg(true);
             else {
@@ -126,6 +147,61 @@ function Google() {
                 setData((prev) => ({ ...prev, description: e.target.value }))
               }
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Links
+            </label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                placeholder="Title"
+                className="w-1/3 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-red-300"
+                value={currentLink.title}
+                onChange={(e) =>
+                  setCurrentLink({ ...currentLink, title: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="URL"
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:ring-red-300"
+                value={currentLink.url}
+                onChange={(e) =>
+                  setCurrentLink({ ...currentLink, url: e.target.value })
+                }
+              />
+              <button
+                type="button"
+                onClick={addLink}
+                className="bg-gray-700 text-white px-3 py-2 rounded-lg hover:bg-gray-800"
+              >
+                Add
+              </button>
+            </div>
+            <ul className="space-y-2">
+              {data.links?.map((link, index) => (
+                <li
+                  key={index}
+                  className="flex justify-between items-center bg-gray-50 p-2 rounded-lg border border-gray-200"
+                >
+                  <span className="text-gray-800 font-medium">
+                    {link.title} -{" "}
+                    <span className="text-gray-500 font-normal text-sm">
+                      {link.url}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeLink(index)}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="flex items-center gap-4">

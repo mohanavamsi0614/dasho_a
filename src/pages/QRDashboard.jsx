@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-
+import socket from "@/lib/socket";
 function QrDashboard() {
   const { event } = useParams();
   const [eventData, setEventData] = useState({});
@@ -9,7 +9,7 @@ function QrDashboard() {
 
   useEffect(() => {
     axios
-      .get(`https://dasho-backend.onrender.com/admin/event/${event}`)
+      .get(`http://localhost:6100/admin/event/${event}`)
       .then((res) => {
         setEventData(res.data);
         setLoading(false);
@@ -18,19 +18,16 @@ function QrDashboard() {
         console.error("Error fetching event:", err);
         setLoading(false);
       });
+    socket.emit("join", event)
   }, [event]);
 
-  const toggleStatus = async () => {
-    try {
-      const res = await axios.post(
-        `https://dasho-backend.onrender.com/admin/event/status/${event}`,
-        { status: !eventData.event?.status }
-      );
-      setEventData(res.data);
-    } catch (err) {
-      console.error("Error changing status:", err);
-    }
-  };
+  const openEvent = async () => {
+    socket.emit("openEvent", event)
+  }
+
+  const closeEvent = async () => {
+    socket.emit("closeEvent", event)
+  }
 
   if (loading) {
     return (
@@ -50,12 +47,11 @@ function QrDashboard() {
           </h1>
           <div className="flex items-center gap-3">
             <button
-              onClick={toggleStatus}
-              className={`px-5 py-2 rounded-lg font-medium transition-all duration-200 ${
-                eventData.event?.status
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-green-600 hover:bg-green-700"
-              }`}
+              onClick={eventData.event?.status ? closeEvent : openEvent}
+              className={`px-5 py-2 rounded-lg font-medium transition-all duration-200 ${eventData.event?.status
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-green-600 hover:bg-green-700"
+                }`}
             >
               {eventData.event?.status ? "Close Event" : "Open Event"}
             </button>
@@ -74,7 +70,7 @@ function QrDashboard() {
                   Object.keys(it || {}).forEach(k => headersSet.add(k));
                 });
                 // prefer ordering for common fields
-                const preferred = ['name','collage','year','branch','rollnumber','email','phone','checkin','checkout'];
+                const preferred = ['name', 'collage', 'year', 'branch', 'rollnumber', 'email', 'phone', 'checkin', 'checkout'];
                 const headers = [];
                 preferred.forEach(h => { if (headersSet.has(h)) { headers.push(h); headersSet.delete(h); } });
                 // remaining headers

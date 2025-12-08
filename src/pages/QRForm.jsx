@@ -1,3 +1,5 @@
+/* global cloudinary */
+/* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -24,9 +26,11 @@ function QRForm() {
     photo1Url: "",
     photo2Url: "",
     type: "qr",
+    other: []
   });
 
   const [segmentInput, setSegmentInput] = useState("");
+  const [openOther, setOpenOther] = useState(false);
 
   useEffect(() => {
     if (typeof cloudinary === "undefined") {
@@ -97,7 +101,7 @@ function QRForm() {
         .toLowerCase()
         .trim()
         .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9\-]/g, "")
+        .replace(/[^a-z0-9-]/g, "")
         .replace(/-+/g, "-");
 
     const eventId = `${slug(
@@ -115,7 +119,7 @@ function QRForm() {
     };
 
     try {
-      const res = await axios.post("https://dasho-backend.onrender.com/admin/event", payload);
+      const res = await axios.post("http://localhost:6100/admin/event", payload);
       if (res.data.org)
         localStorage.setItem("user", JSON.stringify(res.data.org));
       nav("/profile");
@@ -338,6 +342,43 @@ function QRForm() {
           </div>
         </div>
 
+        {/* Custom Fields */}
+        <div className="space-y-2 mb-5">
+          <label className="text-sm text-[#919294]">Custom participant fields</label>
+          <div className="flex gap-3 items-center">
+            <div className="flex-1 flex flex-wrap gap-2">
+              {data.other && data.other.length ? (
+                data.other.map((f, i) => (
+                  <div
+                    key={i}
+                    className="bg-[#22303b] px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                  >
+                    <span>{f.title} ({f.type})</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setData((p) => ({ ...p, other: p.other.filter((_, j) => j !== i) }))
+                      }
+                      className="text-red-400 hover:text-red-500"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-xs text-[#919294]">No custom fields</div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpenOther(true)}
+              className="bg-[#4f46e5] text-white px-3 py-2 rounded-lg hover:bg-indigo-600 transition"
+            >
+              + Add field
+            </button>
+          </div>
+        </div>
+
         {/* Buttons */}
         <div className="flex gap-4 justify-end mt-6">
           <button
@@ -375,6 +416,7 @@ function QRForm() {
                 logoUrl: "",
                 photo1Url: "",
                 photo2Url: "",
+                other: [],
               })
             }
             className="border border-[#E16254]/60 text-[#E16254] px-6 py-2 rounded-lg hover:bg-[#E16254]/10"
@@ -383,6 +425,35 @@ function QRForm() {
           </button>
         </div>
       </form>
+      {openOther && <Popup prop={{ setData, setOpenOther }} />}
+    </div>
+  );
+}
+
+function Popup({ prop }) {
+  const [field, setField] = useState({ title: '', type: 'text' });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/60" onClick={() => prop.setOpenOther(false)} />
+      <div className="relative bg-[#0b1220] border border-[#22303b] text-gray-100 p-6 rounded-lg w-full max-w-md shadow-xl">
+        <h3 className="text-lg font-semibold mb-3">Add custom field</h3>
+        <label className="block text-sm text-gray-300 mb-1">Field title</label>
+        <input type="text" placeholder="e.g., GitHub URL" className="w-full mb-3 p-2 rounded bg-[#07101a] border border-[#152233]" value={field.title} onChange={(e) => setField(prev => ({ ...prev, title: e.target.value }))} />
+        <label className="block text-sm text-gray-300 mb-1">Field type</label>
+        <select className="w-full mb-4 p-2 rounded bg-[#07101a] border border-[#152233]" value={field.type} onChange={(e) => setField(prev => ({ ...prev, type: e.target.value }))}>
+          <option value="text">Text</option>
+          <option value="upload">Upload</option>
+        </select>
+        <div className="flex justify-end gap-2">
+          <button className="px-3 py-1 rounded bg-transparent border border-gray-600" onClick={() => prop.setOpenOther(false)}>Cancel</button>
+          <button className="px-3 py-1 rounded bg-indigo-600 text-white" onClick={() => {
+            if (!field.title) return alert('Please provide a title');
+            prop.setData(prev => ({ ...prev, other: [...(prev.other || []), field] }));
+            prop.setOpenOther(false);
+          }}>Add field</button>
+        </div>
+      </div>
     </div>
   );
 }

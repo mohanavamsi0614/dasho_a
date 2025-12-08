@@ -8,7 +8,7 @@ function QrDashboard() {
 
   useEffect(() => {
     axios
-      .get(`https://dasho-backend.onrender.com/admin/event/${event}`)
+      .get(`http://localhost:6100/admin/event/${event}`)
       .then((res) => {
         setEventData(res.data);
         console.log(res.data);
@@ -19,7 +19,7 @@ function QrDashboard() {
   const toggleStatus = async () => {
     try {
       const res = await axios.post(
-        `https://dasho-backend.onrender.com/admin/event/status/${event}`,
+        `http://localhost:6100/admin/event/status/${event}`,
         { status: !eventData.event?.status }
       );
       setEventData(res.data);

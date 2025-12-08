@@ -1,5 +1,5 @@
 // Auth.jsx
-import Google from "./firebase";
+import Google from "../lib/firebase";
 
 function Auth() {
   return (

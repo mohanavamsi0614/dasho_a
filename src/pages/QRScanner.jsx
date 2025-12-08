@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+/* eslint-disable react/prop-types */
+import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
 import axios from "axios";
 import { useParams } from "react-router";
@@ -66,7 +67,7 @@ const QRScanner = () => {
   const handleCheck = async (type) => {
     setLoading(true);
     try {
-      await axios.post(`https://dasho-backend.onrender.com/admin/event/qr/${event}`, {
+      await axios.post(`http://localhost:6100/admin/event/qr/${event}`, {
         userId: qrResult._id,
         status: type,
         time: new Date().getHours() + ":" + new Date().getMinutes(),

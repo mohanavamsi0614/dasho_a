@@ -13,6 +13,7 @@ function Profile() {
   const contactPhone = user.contactPhone || user.phone || "";
   const description = user.description || user.bio || "";
   const imgUrl = user.imgUrl || "";
+  const links = user.links || [];
   const events = user.events || [];
 
   if (!orgName) {
@@ -84,6 +85,27 @@ function Profile() {
                 <p className="text-gray-400 whitespace-pre-wrap">
                   {description}
                 </p>
+              </div>
+            )}
+
+            {links && links.length > 0 && (
+              <div className="mt-4">
+                <h2 className="text-xl font-medium text-white mb-2">
+                  Important Links
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  {links.map((link, index) => (
+                    <a
+                      key={index}
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-md text-red-400 text-sm border border-gray-700 transition-colors"
+                    >
+                      {link.title}
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -165,6 +187,18 @@ function Profile() {
                           className="px-3 py-2 bg-gray-800 hover:bg-gray-900 rounded-md text-gray-200 text-sm"
                         >
                           Dashboard
+                        </button>
+                        <button
+                          onClick={() => nav(`/payment/${event._id.$oid || event._id}`)}
+                          className="px-3 py-2 bg-gray-800 hover:bg-gray-900 rounded-md text-gray-200 text-sm"
+                        >
+                          Payments
+                        </button>
+                        <button
+                          onClick={() => nav(`/marks/${event._id.$oid || event._id}`)}
+                          className="px-3 py-2 bg-gray-800 hover:bg-gray-900 rounded-md text-gray-200 text-sm"
+                        >
+                          Marks
                         </button>
                       </>
                     )}

@@ -1,39 +1,36 @@
 import './App.css'
 import { Navigate, Route, Routes } from 'react-router'
-import Home from './Home'
-import Auth from './Auth'
-import Profile from './Profile'
-import QRForm from './qrForm'
-import QRScanner from './QrScanner'
-import HackthonForm from './HackthonForm'
-import QrDashboard from './QrDashboard'
-import HackDashboard from './HackDashboard'
-import Attd from './Attd'
-import { useEffect, useState } from 'react'
-import HackAttd from './HackAttd'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
+import Layout from './components/Layout'
 
+// Pages
+import Home from './pages/Home'
+import Auth from './pages/Auth'
+import Profile from './pages/Profile'
+import QRForm from './pages/QRForm'
+import QRScanner from './pages/QRScanner'
+import HackathonForm from './pages/HackathonForm'
+import QRDashboard from './pages/QRDashboard'
+import HackDashboard from './pages/HackDashboard'
+import Attd from './pages/Attd'
+import HackAttd from './pages/HackAttd'
+import Payement from './pages/Payement'
+import Marks from './pages/Marks'
+import socket from './lib/socket'
+import { useEffect } from 'react'
 
-function ProtectedRoute({ children }) {
-  const user = JSON.parse(localStorage.getItem('user') || 'null');
-  return user ? children : <Navigate to="/auth" replace />;
-}
-
-
-function App() {
-    const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-
-
+function AppContent() {
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    // Simulate startup loading
-    const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
-    setUser(storedUser);
-    const timer = setTimeout(() => setLoading(false), 500); // half-second load
-    return () => clearTimeout(timer);
+    socket.connect();
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
-if (loading) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
         <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -41,21 +38,33 @@ if (loading) {
       </div>
     );
   }
-  return (
-    <Routes>
-      <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-      <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
-      <Route path='/profile' element={<ProtectedRoute><Profile/></ProtectedRoute>}/>
-      <Route path='/qr' element={<ProtectedRoute><QRForm/></ProtectedRoute>}/>
-      <Route path='/hackthon' element={<ProtectedRoute><HackthonForm/></ProtectedRoute>} />
-      <Route path='/qr/scanner/:event' element={<QRScanner/>} />
-      <Route path='/dashboard/qr/:event' element={<QrDashboard/>} />
-      <Route path='/dashboard/hack/:event' element={<ProtectedRoute><HackDashboard/></ProtectedRoute>} />
-      <Route path='/attd/:event' element={<ProtectedRoute><Attd/></ProtectedRoute>} />
-      <Route path='/attd/hack/:event' element={<ProtectedRoute><HackAttd/></ProtectedRoute>} />
-         <Route path="*" element={<Navigate to="/" replace />} />
 
-    </Routes>
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
+        <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path='/qr' element={<ProtectedRoute><QRForm /></ProtectedRoute>} />
+        <Route path='/hackthon' element={<ProtectedRoute><HackathonForm /></ProtectedRoute>} />
+        <Route path='/qr/scanner/:event' element={<QRScanner />} />
+        <Route path='/dashboard/qr/:event' element={<QRDashboard />} />
+        <Route path='/dashboard/hack/:event' element={<ProtectedRoute><HackDashboard /></ProtectedRoute>} />
+        <Route path='/attd/:event' element={<ProtectedRoute><Attd /></ProtectedRoute>} />
+        <Route path='/attd/hack/:event' element={<ProtectedRoute><HackAttd /></ProtectedRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path='/payment/:event' element={<Payement />} />
+        <Route path='/marks/:event' element={<Marks />} />
+      </Routes>
+    </Layout>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
 

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { BackgroundBeams } from "./components/ui/background-beams";
+import { BackgroundBeams } from "../components/ui/background-beams";
 
 function Home() {
   const nav = useNavigate();

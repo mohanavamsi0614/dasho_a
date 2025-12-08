@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react/prop-types */
 import React from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
