@@ -18,6 +18,7 @@ function Marks() {
             setevent(res.data.event)
             setteams(res.data.event_og)
             setteam(teams[0] || {})
+            console.log(res.data)
 
             setRounds(res.data.event.rounds)
             setround(res.data.event.rounds[0] || {})

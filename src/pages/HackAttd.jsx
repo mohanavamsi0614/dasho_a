@@ -13,6 +13,7 @@ function HackAttd() {
 
   useEffect(() => {
     fetchData();
+    socket.emit("join", event)
   }, [event]);
 
   const fetchData = () => {
@@ -48,13 +49,6 @@ function HackAttd() {
       return
     }
     try {
-      // await api.post(
-      //   `/admin/hack/attd/${event}/${team._id}`,
-      //   {
-      //     lead: team.lead,
-      //     members: team.members,
-      //   }
-      // );
       socket.emit("attd", { event, team: team._id, lead: team.lead, members: team.members })
       alert(`Attendance for ${team.teamName} submitted successfully!`);
     } catch (err) {
@@ -70,6 +64,12 @@ function HackAttd() {
       socket.emit("changeAttd", "", event)
     }
   }
+
+  socket.on("currAttd", (id) => {
+    console.log(id)
+    setActiveAttd(id)
+  })
+
 
   if (loading) {
     return (

@@ -20,7 +20,7 @@ function HackDashboard() {
         console.error(err);
         setLoading(false);
       });
-    socket.emit("join", event)
+    socket.emit("join", [event])
 
   }, [event]);
 
