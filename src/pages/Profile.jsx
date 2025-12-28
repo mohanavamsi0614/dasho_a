@@ -175,7 +175,7 @@ function Profile() {
                         </button>
                       </>
                     ) : (
-                      <>
+                      <div className=" flex flex-wrap gap-3">
                         <button
                           onClick={() => nav(`/attd/hack/${event._id.$oid || event._id}`)}
                           className="px-3 py-2 bg-red-500 hover:bg-red-600 rounded-md text-white text-sm"
@@ -200,7 +200,13 @@ function Profile() {
                         >
                           Marks
                         </button>
-                      </>
+                        <button
+                          onClick={() => nav(`/update/${event._id.$oid || event._id}`)}
+                          className="px-3 py-2 bg-gray-800 hover:bg-gray-900 rounded-md text-gray-200 text-sm"
+                        >
+                          Update
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

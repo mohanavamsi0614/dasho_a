@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
+import api from "./api";
 
-const socket = io("https://dasho-backend.onrender.com/");
+const socket = io(api.defaults.baseURL);
 
 export default socket;

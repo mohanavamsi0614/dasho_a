@@ -19,6 +19,7 @@ import Payement from './pages/Payement'
 import Marks from './pages/Marks'
 import socket from './lib/socket'
 import { useEffect } from 'react'
+import Update from './pages/Update'
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -54,6 +55,7 @@ function AppContent() {
         <Route path='/attd/hack/:event' element={<ProtectedRoute><HackAttd /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path='/payment/:event' element={<Payement />} />
+        <Route path='/update/:eventId' element={<Update />} />
         <Route path='/marks/:event' element={<Marks />} />
       </Routes>
     </Layout>

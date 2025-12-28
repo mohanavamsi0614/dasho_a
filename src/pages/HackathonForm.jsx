@@ -457,8 +457,8 @@ function Popup({ prop }) {
         <input type="text" placeholder="e.g., GitHub URL" className="w-full mb-3 p-2 rounded bg-[#07101a] border border-[#152233]" onChange={(e) => { setData(prev => ({ ...prev, title: e.target.value })) }} />
         <label className="block text-sm text-gray-300 mb-1">Field type</label>
         <select className="w-full mb-4 p-2 rounded bg-[#07101a] border border-[#152233]" value={data.type} onChange={(e) => { setData(prev => ({ ...prev, type: e.target.value })) }}>
-          <option value="text">Text</option>
-          <option value="upload">Upload</option>
+          <option value="FT">For Team</option>
+          <option value="EP">For each participant</option>
         </select>
         <div className="flex justify-end gap-2">
           <button className="px-3 py-1 rounded bg-transparent border border-gray-600" onClick={() => prop.setopen(false)}>Cancel</button>
