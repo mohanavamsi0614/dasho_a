@@ -74,7 +74,7 @@ function Marks() {
         if (!selectedTeam || !selectedRound) return;
 
         const payload = {
-            marks: { ...currentMarks, name: selectedRound.name }
+            marks: { ...currentMarks, name: selectedRound.name, total: calculateTotal(currentMarks) }
         };
 
         api.post("/admin/marks/" + eventId + "/" + selectedTeam._id, payload)
@@ -184,8 +184,8 @@ function Marks() {
                                 key={r.name}
                                 onClick={() => setSelectedRound(r)}
                                 className={`whitespace-nowrap px-4 py-2 rounded-full border transition-all duration-300 text-sm font-medium ${selectedRound?.name === r.name
-                                        ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-                                        : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:border-white/30"
+                                    ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                                    : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:border-white/30"
                                     }`}
                             >
                                 {r.name}
@@ -231,8 +231,8 @@ function Marks() {
                                                     key={team._id}
                                                     onClick={() => setSelectedTeam(team)}
                                                     className={`p-3 rounded-xl cursor-pointer transition-all border flex justify-between items-center ${isSelected
-                                                            ? "bg-indigo-600/20 border-indigo-500/50"
-                                                            : "bg-white/5 border-transparent hover:bg-white/10"
+                                                        ? "bg-indigo-600/20 border-indigo-500/50"
+                                                        : "bg-white/5 border-transparent hover:bg-white/10"
                                                         }`}
                                                 >
                                                     <div>
