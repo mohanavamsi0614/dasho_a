@@ -112,6 +112,7 @@ function HackDashboard() {
     <div className="min-h-screen font-poppins bg-[#212121] text-white p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">Hackathon Dashboard</h1>
+        <div className=" bg-red-500 text-white p-2 rounded-xl">TeamPanel Link:{`https://dashoo-p.vercel.app/teampanel/${event}`}</div>
         <div className="flex gap-4">
           <button
             onClick={eventData?.event?.status == "open" ? closeEvent : openEvent}
