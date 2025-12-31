@@ -1,258 +1,486 @@
-import { useState, useEffect } from "react"
-import { useParams } from "react-router"
-import api from "../lib/api"
+import { useState, useEffect } from "react";
+import { useParams } from "react-router";
+import api from "../lib/api";
 
 function Marks() {
-    const eventId = useParams().event
-    const [event, setevent] = useState([])
-    const [teams, setteams] = useState([])
-    const [team, setteam] = useState(teams[0] || {})
-    const [loading, setloading] = useState(true)
-    const [rounds, setRounds] = useState([])
-    const [open, setopen] = useState(false)
-    const [round, setround] = useState({})
-    const [marks, setmarks] = useState([])
+    const eventId = useParams().event;
+    // Core Data
+    const [eventData, setEventData] = useState(null); // stores { event: ..., event_og: ... }
+    const [teams, setTeams] = useState([]);
+    const [rounds, setRounds] = useState([]);
 
+    // UI State
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState("grading"); // "grading" | "results"
+    const [selectedRound, setSelectedRound] = useState(null);
+    const [selectedTeam, setSelectedTeam] = useState(null);
+    const [currentMarks, setCurrentMarks] = useState({});
+    const [searchTerm, setSearchTerm] = useState("");
+    const [showCreateRound, setShowCreateRound] = useState(false);
+
+    // Fetch Data on Load
     useEffect(() => {
-        api.get("/admin/event/" + eventId).then((res) => {
-            setevent(res.data.event)
-            setteams(res.data.event_og)
-            setteam(teams[0] || {})
-            console.log(res.data)
+        setLoading(true);
+        api.get("/admin/event/" + eventId)
+            .then((res) => {
+                setEventData(res.data);
+                setTeams(res.data.event_og || []);
 
-            setRounds(res.data.event.rounds)
-            setround(res.data.event.rounds[0] || {})
-            setloading(false)
+                const fetchedRounds = res.data.event.rounds || [];
+                setRounds(fetchedRounds);
+                if (fetchedRounds.length > 0) {
+                    setSelectedRound(fetchedRounds[0]);
+                }
 
-        })
-    }, [])
-    console.log(team)
+                // Select first team by default if available
+                if (res.data.event_og && res.data.event_og.length > 0) {
+                    setSelectedTeam(res.data.event_og[0]);
+                }
+
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error(err);
+                setLoading(false);
+            });
+    }, [eventId]);
+
+    // Sync marks when Team or Round changes
     useEffect(() => {
-        if (team.marks && team.marks[round.name]) {
-            setmarks(team.marks[round.name])
-        } else {
-            setmarks({})
+        if (selectedTeam && selectedRound) {
+            // Find existing marks for this round if they exist in the team object
+            // NOTE: The backend structure for marks might vary. 
+            // Based on previous code: team.marks[round.name] -> { "Category": score }
+            const existingMarks = selectedTeam.marks?.[selectedRound.name] || {};
+            setCurrentMarks(existingMarks);
         }
-    }, [team, round])
+    }, [selectedTeam, selectedRound]);
 
-    const handleCreateRound = () => {
-        setopen(true)
-    }
+    // Handlers
+    const handleScoreChange = (category, value) => {
+        // Ensure value doesn't exceed max
+        const max = Number(selectedRound.catogary.find(c => c.title === category)?.marks || 100);
+        let numValue = Number(value);
+        if (numValue < 0) numValue = 0;
+        // if (numValue > max) numValue = max; // Optional: Enforce max cap strictly or just warn
 
-    const handleDeleteRound = (round) => {
-        setRounds((prev) => prev.filter((r) => r.name !== round.name))
-    }
-    const handelSubmit = () => {
-        api.post("/admin/marks/" + eventId + "/" + team._id, { marks: { ...marks, name: round.name } }).then((res) => {
-            setmarks({})
-            console.log(res.data)
-        })
+        setCurrentMarks((prev) => ({
+            ...prev,
+            [category]: numValue
+        }));
+    };
+
+    const handleSubmitMarks = () => {
+        if (!selectedTeam || !selectedRound) return;
+
+        const payload = {
+            marks: { ...currentMarks, name: selectedRound.name }
+        };
+
+        api.post("/admin/marks/" + eventId + "/" + selectedTeam._id, payload)
+            .then((res) => {
+                alert("Marks saved successfully!");
+
+                // OPTIMISTIC UPDATE: Update local teams state so we don't need to refetch
+                setTeams((prevTeams) =>
+                    prevTeams.map(t => {
+                        if (t._id === selectedTeam._id) {
+                            return {
+                                ...t,
+                                marks: {
+                                    ...t.marks,
+                                    [selectedRound.name]: currentMarks
+                                }
+                            }
+                        }
+                        return t;
+                    })
+                );
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Failed to save marks.");
+            });
+    };
+
+    const handleNextTeam = () => {
+        const filtered = getFilteredTeams();
+        const idx = filtered.findIndex(t => t._id === selectedTeam._id);
+        if (idx !== -1 && idx < filtered.length - 1) {
+            setSelectedTeam(filtered[idx + 1]);
+        } else if (filtered.length > 0) {
+            setSelectedTeam(filtered[0]); // Loop back to start
+        }
+    };
+
+    const getFilteredTeams = () => {
+        return teams.filter(t => t.teamName.toLowerCase().includes(searchTerm.toLowerCase()));
+    };
+
+    const calculateTotal = (marksObj) => {
+        if (!marksObj) return 0;
+        // marksObj is something like { "Design": 10, "Code": 20, "name": "Round 1" }
+        // We need to sum only numeric values, ignoring "name"
+        return Object.entries(marksObj).reduce((acc, [key, val]) => {
+            if (key === "name") return acc;
+            return acc + (Number(val) || 0);
+        }, 0);
+    };
+
+    // --- Render ---
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen bg-[#0a0a0a]">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
+            </div>
+        );
     }
 
     return (
-        <div className="min-h-screen bg-background text-foreground p-8">
-            <div className="max-w-6xl mx-auto space-y-8">
-                <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold tracking-tight">Marks Management</h1>
-                    {rounds && rounds.length > 0 && (
+        <div className="min-h-screen font-poppins bg-[#0a0a0a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] text-white p-4 sm:p-8 relative overflow-hidden">
+            {/* Background blobs */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+                <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px]" />
+                <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px]" />
+            </div>
+
+            <div className="max-w-7xl mx-auto space-y-6">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-6 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Marks Management</h1>
+                        <p className="text-gray-400 text-sm">Grading Panel for {eventData?.event?.title || "Hackathon"}</p>
+                    </div>
+
+                    <div className="flex bg-black/40 p-1 rounded-xl">
                         <button
-                            onClick={handleCreateRound}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md transition-colors font-medium"
+                            onClick={() => setActiveTab("grading")}
+                            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'grading' ? "bg-indigo-600 text-white shadow-lg" : "text-gray-400 hover:text-white"}`}
                         >
-                            Create Round
+                            Grading
                         </button>
-                    )}
+                        <button
+                            onClick={() => setActiveTab("results")}
+                            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'results' ? "bg-indigo-600 text-white shadow-lg" : "text-gray-400 hover:text-white"}`}
+                        >
+                            Results Table
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={() => setShowCreateRound(true)}
+                        className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white font-semibold text-sm shadow-lg hover:shadow-emerald-500/20 transition-all active:scale-95"
+                    >
+                        + Create Round
+                    </button>
                 </div>
 
-                {(!rounds || rounds.length === 0) && (
-                    <div className="flex flex-col items-center justify-center h-[50vh] gap-4 border-2 border-dashed border-muted rounded-lg bg-card/50">
-                        <h1 className="text-xl font-semibold text-muted-foreground">No Rounds Found</h1>
-                        <button
-                            onClick={handleCreateRound}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md transition-colors font-medium"
-                        >
-                            Create Round
-                        </button>
+                {/* Round Selector Stripe */}
+                {rounds.length > 0 ? (
+                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                        {rounds.map(r => (
+                            <button
+                                key={r.name}
+                                onClick={() => setSelectedRound(r)}
+                                className={`whitespace-nowrap px-4 py-2 rounded-full border transition-all duration-300 text-sm font-medium ${selectedRound?.name === r.name
+                                        ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                                        : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:border-white/30"
+                                    }`}
+                            >
+                                {r.name}
+                            </button>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center p-10 border border-dashed border-gray-700 rounded-3xl bg-white/5">
+                        <p className="text-gray-400">No rounds found. Please create a round to start grading.</p>
                     </div>
                 )}
 
-                {rounds && rounds.length > 0 && (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        {/* Left Column: Rounds List */}
-                        <div className="lg:col-span-4 space-y-4">
-                            <h2 className="text-xl font-semibold">Rounds</h2>
-                            <div className="flex flex-col gap-3">
-                                {rounds.map((r, index) => (
-                                    <div
-                                        key={index}
-                                        onClick={() => setround(r)}
-                                        className={`p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${round.name === r.name
-                                            ? "bg-primary text-primary-foreground border-primary shadow-md"
-                                            : "bg-card text-card-foreground border-border hover:bg-accent hover:text-accent-foreground"
-                                            }`}
-                                    >
-                                        <div className="flex justify-between items-center">
-                                            <h3 className="font-semibold text-lg">{r.name}</h3>
-                                            {round.name === r.name && (
-                                                <span className="bg-primary-foreground/20 px-2 py-1 rounded text-xs font-medium">Selected</span>
-                                            )}
-                                        </div>
+
+                {/* Content Area */}
+                {rounds.length > 0 && (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
+
+                        {/* --- GRADING TAB --- */}
+                        {activeTab === 'grading' && (
+                            <>
+                                {/* Left Sidebar: Team List */}
+                                <div className="lg:col-span-3 flex flex-col gap-4 bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-3xl h-[600px]">
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            placeholder="Search teams..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 pl-10 text-sm text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                                        />
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute left-3 top-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
                                     </div>
-                                ))}
+
+                                    <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                                        {getFilteredTeams().map(team => {
+                                            const isSelected = selectedTeam?._id === team._id;
+                                            const hasMarks = team.marks?.[selectedRound?.name]; // Check if marked for this round
+
+                                            return (
+                                                <div
+                                                    key={team._id}
+                                                    onClick={() => setSelectedTeam(team)}
+                                                    className={`p-3 rounded-xl cursor-pointer transition-all border flex justify-between items-center ${isSelected
+                                                            ? "bg-indigo-600/20 border-indigo-500/50"
+                                                            : "bg-white/5 border-transparent hover:bg-white/10"
+                                                        }`}
+                                                >
+                                                    <div>
+                                                        <p className={`text-sm font-semibold ${isSelected ? "text-indigo-300" : "text-gray-300"}`}>{team.teamName}</p>
+
+                                                    </div>
+                                                    {hasMarks && (
+                                                        <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
+                                        {getFilteredTeams().length === 0 && (
+                                            <p className="text-gray-500 text-sm text-center mt-10">No teams match your search.</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Right Panel: Grading Form */}
+                                <div className="lg:col-span-9 flex flex-col bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-3xl relative overflow-hidden">
+                                    {selectedTeam ? (
+                                        <>
+                                            <div className="flex justify-between items-start mb-8 pb-6 border-b border-white/10">
+                                                <div>
+                                                    <h2 className="text-3xl font-bold text-white mb-1">{selectedTeam.teamName}</h2>
+                                                    <div className="flex gap-4 text-sm text-gray-400">
+                                                        <span>Lead: {selectedTeam.lead?.name}</span>
+                                                        <span>•</span>
+                                                        <span>{selectedTeam.lead?.college}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-sm text-gray-400 mb-1">Current Score</div>
+                                                    <div className="text-4xl font-mono font-bold text-indigo-400">
+                                                        {calculateTotal(currentMarks)}
+                                                        <span className="text-lg text-gray-600"> / {selectedRound.total}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 overflow-y-auto pr-2 custom-scrollbar max-h-[400px]">
+                                                {selectedRound.catogary.map((cat, idx) => (
+                                                    <div key={idx} className="bg-black/20 p-5 rounded-2xl border border-white/5 group hover:border-white/10 transition-colors">
+                                                        <div className="flex justify-between mb-3">
+                                                            <label className="text-gray-300 font-medium">{cat.title}</label>
+                                                            <span className="text-xs font-mono py-1 px-2 rounded bg-white/10 text-gray-400">Max: {cat.marks}</span>
+                                                        </div>
+                                                        <div className="relative">
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                max={cat.marks}
+                                                                value={currentMarks[cat.title] || ""}
+                                                                onChange={(e) => handleScoreChange(cat.title, e.target.value)}
+                                                                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-lg text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-gray-700"
+                                                                placeholder="0"
+                                                            />
+                                                        </div>
+                                                        <input
+                                                            type="range"
+                                                            min="0"
+                                                            max={cat.marks}
+                                                            value={Number(currentMarks[cat.title] || 0)}
+                                                            onChange={(e) => handleScoreChange(cat.title, e.target.value)}
+                                                            className="w-full mt-4 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="mt-auto flex justify-end gap-4 pt-6 border-t border-white/10">
+                                                <button
+                                                    onClick={handleNextTeam}
+                                                    className="px-6 py-3 rounded-xl font-semibold bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all"
+                                                >
+                                                    Skip to Next
+                                                </button>
+                                                <button
+                                                    onClick={handleSubmitMarks}
+                                                    className="px-8 py-3 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all"
+                                                >
+                                                    Save Marks
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                                            <p>Select a team from the list to start grading.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {/* --- RESULTS TAB --- */}
+                        {activeTab === 'results' && (
+                            <div className="lg:col-span-12 bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full text-left">
+                                        <thead className="bg-black/40 text-gray-300 uppercase text-xs tracking-wider font-semibold">
+                                            <tr>
+                                                <th className="p-5 border-b border-white/5">Rank</th>
+                                                <th className="p-5 border-b border-white/5">Team Name</th>
+                                                {selectedRound.catogary.map((cat, i) => (
+                                                    <th key={i} className="p-5 border-b border-white/5">{cat.title}</th>
+                                                ))}
+                                                <th className="p-5 border-b border-white/5 text-indigo-400">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/5">
+                                            {/* Sort teams by total score descending */}
+                                            {[...teams]
+                                                .map(t => ({
+                                                    ...t,
+                                                    totalScore: calculateTotal(t.marks?.[selectedRound.name])
+                                                }))
+                                                .sort((a, b) => b.totalScore - a.totalScore)
+                                                .map((team, idx) => (
+                                                    <tr key={team._id} className="hover:bg-white/5 transition-colors">
+                                                        <td className="p-5 font-mono text-gray-500">#{idx + 1}</td>
+                                                        <td className="p-5 font-bold text-white">{team.teamName}</td>
+                                                        {selectedRound.catogary.map((cat, i) => (
+                                                            <td key={i} className="p-5 text-gray-400">
+                                                                {team.marks?.[selectedRound.name]?.[cat.title] || "-"}
+                                                            </td>
+                                                        ))}
+                                                        <td className="p-5 font-bold text-indigo-400 text-lg">
+                                                            {team.totalScore}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Right Column: Details & Marks */}
-                        <div className="lg:col-span-8 space-y-8">
-                            {/* Round Details */}
-                            {round && round.name && (
-                                <div className="bg-card text-card-foreground border rounded-lg shadow-sm p-6">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h2 className="text-2xl font-bold">{round.name} Details</h2>
-                                        <div className="text-sm text-muted-foreground">
-                                            Total Points: <span className="font-semibold text-foreground">{round.total}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid gap-3">
-                                        {round.catogary && round.catogary.map((cat, index) => (
-                                            <div key={index} className="flex justify-between items-center p-3 bg-muted/50 rounded-md border border-transparent hover:border-border transition-colors">
-                                                <span className="font-medium">{cat.title}</span>
-                                                <span className="bg-background px-3 py-1 rounded border text-sm font-mono">{cat.marks} pts</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Team Marks Entry */}
-                            {team && team.teamName && round && round.name && (
-                                <div className="bg-card text-card-foreground border rounded-lg shadow-sm p-6">
-                                    <div className="flex justify-between items-center mb-6 border-b pb-4">
-                                        <div>
-                                            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Scoring Team</h3>
-                                            <h2 className="text-2xl font-bold text-primary">{team.teamName}</h2>
-                                        </div>
-                                        <div className="text-right">
-                                            <button
-                                                onClick={() => setteam(teams[teams.indexOf(team) + 1] || teams[0])}
-                                                className="text-sm bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-1.5 rounded-md transition-colors"
-                                            >
-                                                Skip / Next Team →
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4 mb-6">
-                                        {round.catogary && round.catogary.map((cat, index) => (
-                                            <div key={index} className="grid grid-cols-12 gap-4 items-center">
-                                                <div className="col-span-8">
-                                                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                                        {cat.title} <span className="text-muted-foreground text-xs">({cat.marks} pts)</span>
-                                                    </label>
-                                                </div>
-                                                <div className="col-span-4">
-                                                    <input
-                                                        type="number"
-                                                        max={cat.marks}
-                                                        onChange={(e) => {
-                                                            setmarks({ ...marks, [cat.title]: e.target.value })
-                                                        }}
-                                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                                        placeholder="0"
-                                                    />
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="flex justify-end pt-4 border-t">
-                                        <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-2.5 rounded-md transition-colors font-medium shadow-sm"
-                                            onClick={handelSubmit}
-                                        >
-                                            Submit Scores
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
                     </div>
                 )}
-
-                {open && <Popup setRound={setRounds} setClose={setopen} rounds={rounds} eventId={eventId} />}
             </div>
+
+            {/* Create Round Popup */}
+            {showCreateRound && (
+                <CreateRoundPopup
+                    setClose={() => setShowCreateRound(false)}
+                    eventId={eventId}
+                    onSuccess={(newRound) => {
+                        setRounds([...rounds, newRound]);
+                        setSelectedRound(newRound);
+                    }}
+                />
+            )}
         </div>
-    )
+    );
 }
 
-function Popup({ setRound, setClose, rounds, eventId }) {
-    const [catogary, setCatogary] = useState([])
-    const [roundName, setRoundName] = useState("")
+// Sub-component for Creating Rounds
+function CreateRoundPopup({ setClose, eventId, onSuccess }) {
+    const [name, setName] = useState("");
+    const [categories, setCategories] = useState([]);
 
-    const handelcreateround = () => {
-        const newRound = { name: roundName, catogary, total: catogary.reduce((total, cat) => total + Number(cat.marks), 0) }
-        api.post("/admin/hackthon/round/create/" + eventId, { round: newRound }).then((res) => {
-            console.log(res.data)
-        })
-        setRound([...rounds, newRound])
-        setClose(false)
-    }
+    // Add one empty category by default
+    useEffect(() => {
+        if (categories.length === 0) setCategories([{ title: "", marks: "" }]);
+    }, []);
+
+    const addCategory = () => setCategories([...categories, { title: "", marks: "" }]);
+
+    const removeCategory = (idx) => {
+        setCategories(categories.filter((_, i) => i !== idx));
+    };
+
+    const updateCategory = (idx, field, value) => {
+        const newCats = [...categories];
+        newCats[idx][field] = value;
+        setCategories(newCats);
+    };
+
+    const totalPoints = categories.reduce((sum, c) => sum + (Number(c.marks) || 0), 0);
+
+    const handleSave = () => {
+        // Validate
+        if (!name.trim()) return alert("Round name is required");
+        const validCats = categories.filter(c => c.title.trim() && c.marks);
+        if (validCats.length === 0) return alert("Add at least one valid category");
+
+        const newRound = {
+            name,
+            catogary: validCats,
+            total: totalPoints
+        };
+
+        api.post("/admin/hackthon/round/create/" + eventId, { round: newRound })
+            .then((res) => {
+                alert("Round created successfully!");
+                onSuccess(newRound);
+                setClose();
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Failed to create round");
+            });
+    };
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-background border rounded-lg p-6 w-full max-w-md shadow-lg animate-in fade-in zoom-in duration-200">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold">Create New Round</h2>
-                    <button onClick={() => setClose(false)} className="text-muted-foreground hover:text-foreground">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div className="bg-[#111] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-white">Create New Round</h2>
+                    <button onClick={setClose} className="text-gray-400 hover:text-white">✕</button>
                 </div>
 
-                <div className="space-y-5">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Round Name</label>
+                <div className="p-6 space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Round Name</label>
                         <input
-                            placeholder="e.g. Ideation Phase"
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            onChange={(e) => setRoundName(e.target.value)}
-                            value={roundName}
+                            type="text"
+                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
+                            placeholder="e.g. Final Pitch"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
                         />
                     </div>
 
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                            <label className="text-sm font-medium leading-none">Scoring Categories</label>
-                            <button
-                                onClick={() => setCatogary([...catogary, { title: "", marks: 0 }])}
-                                className="text-xs bg-secondary text-secondary-foreground hover:bg-secondary/80 px-2.5 py-1.5 rounded-md transition-colors font-medium"
-                            >
-                                + Add Category
-                            </button>
+                    <div>
+                        <div className="flex justify-between items-center mb-3">
+                            <label className="text-sm font-medium text-gray-400">Scoring Categories</label>
+                            <button onClick={addCategory} className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold">+ Add Category</button>
                         </div>
-
-                        <div className="max-h-[240px] overflow-y-auto space-y-2 pr-1 -mr-1">
-                            {catogary.length === 0 && (
-                                <div className="text-center py-4 text-sm text-muted-foreground border border-dashed rounded-md">
-                                    No categories added yet.
-                                </div>
-                            )}
-                            {catogary.map((cat, index) => (
-                                <div key={index} className="flex gap-2 items-center group">
+                        <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+                            {categories.map((cat, idx) => (
+                                <div key={idx} className="flex gap-2">
                                     <input
-                                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                        placeholder="Category Title"
+                                        placeholder="Title"
+                                        className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
                                         value={cat.title}
-                                        onChange={(e) => setCatogary(catogary.map((c, i) => i === index ? { ...c, title: e.target.value } : c))}
+                                        onChange={(e) => updateCategory(idx, "title", e.target.value)}
                                     />
                                     <input
-                                        className="flex h-9 w-20 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-center"
                                         placeholder="Pts"
                                         type="number"
+                                        className="w-20 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white text-center"
                                         value={cat.marks}
-                                        onChange={(e) => setCatogary(catogary.map((c, i) => i === index ? { ...c, marks: e.target.value } : c))}
+                                        onChange={(e) => updateCategory(idx, "marks", e.target.value)}
                                     />
                                     <button
-                                        onClick={() => setCatogary(catogary.filter((_, i) => i !== index))}
-                                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 p-2 rounded-md transition-colors opacity-0 group-hover:opacity-100"
-                                        title="Remove"
+                                        onClick={() => removeCategory(idx)}
+                                        className="text-gray-500 hover:text-red-400 px-2"
                                     >
                                         ✕
                                     </button>
@@ -261,29 +489,19 @@ function Popup({ setRound, setClose, rounds, eventId }) {
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-center py-3 border-t border-b bg-muted/20 -mx-6 px-6">
-                        <span className="font-semibold text-sm">Total Points</span>
-                        <span className="font-bold text-lg text-primary">{catogary.reduce((total, cat) => total + Number(cat.marks), 0)}</span>
+                    <div className="flex justify-between items-center bg-white/5 p-4 rounded-xl">
+                        <span className="text-gray-300 font-medium">Total Points</span>
+                        <span className="text-xl font-bold text-indigo-400">{totalPoints}</span>
                     </div>
+                </div>
 
-                    <div className="flex justify-end gap-3 pt-2">
-                        <button
-                            onClick={() => setClose(false)}
-                            className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 rounded-md transition-colors font-medium"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handelcreateround}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-md transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={!roundName || catogary.length === 0}
-                        >
-                            Save Round
-                        </button>
-                    </div>
+                <div className="p-6 border-t border-white/10 flex justify-end gap-3 bg-white/5">
+                    <button onClick={setClose} className="px-4 py-2 text-gray-400 hover:text-white font-medium">Cancel</button>
+                    <button onClick={handleSave} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold shadow-lg shadow-indigo-500/20">Create Round</button>
                 </div>
             </div>
         </div>
-    )
+    );
 }
-export default Marks
+
+export default Marks;
