@@ -18,7 +18,7 @@ function QRForm() {
     venue: "",
     address: "",
     capacity: "",
-    ticketPrice: "",
+    cost: "",
     description: "",
     segments: [],
     bannerUrl: "",
@@ -116,7 +116,7 @@ function QRForm() {
     const payload = {
       ...data,
       capacity: Number(data.capacity) || 0,
-      ticketPrice: Number(data.ticketPrice) || 0,
+      cost: Number(data.cost) || 0,
       segments: data.segments.map((s) => String(s).trim()).filter(Boolean),
       orgId,
       by: orgId,
@@ -249,9 +249,9 @@ function QRForm() {
             <label className="text-sm text-[#919294]">Ticket Price</label>
             <input
               type="number"
-              value={data.ticketPrice}
+              value={data.cost}
               onChange={(e) =>
-                setData((p) => ({ ...p, ticketPrice: e.target.value }))
+                setData((p) => ({ ...p, cost: e.target.value }))
               }
               placeholder="0 for free"
               className="w-full bg-[#1a1a1a] border border-[#919294]/30 p-3 rounded-lg"
@@ -260,7 +260,7 @@ function QRForm() {
         </div>
 
         {/* Payment */}
-        {Number(data.ticketPrice) > 0 && (
+        {Number(data.cost) > 0 && (
           <div className="mb-5">
             <label className="block text-[#919294] text-sm mb-2 font-semibold">
               Payment Details
@@ -513,7 +513,7 @@ function QRForm() {
                 venue: "",
                 address: "",
                 capacity: "",
-                ticketPrice: "",
+                cost: "",
                 description: "",
                 segments: [],
                 bannerUrl: "",

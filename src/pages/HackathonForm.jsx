@@ -357,7 +357,6 @@ function HackthonForm() {
                         )}
                       </div>
                       <button
-
                         type="button"
                         className="text-red-500 font-bold"
                         onClick={() => {
