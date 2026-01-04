@@ -26,8 +26,13 @@ function QRForm() {
     photo1Url: "",
     photo2Url: "",
     type: "qr",
-    other: []
+    other: [],
+
+    payments: [],
+    links: []
   });
+
+  const [openPayment, setOpenPayment] = useState(false);
 
   const [segmentInput, setSegmentInput] = useState("");
   const [openOther, setOpenOther] = useState(false);
@@ -254,6 +259,54 @@ function QRForm() {
           </div>
         </div>
 
+        {/* Payment */}
+        {Number(data.ticketPrice) > 0 && (
+          <div className="mb-5">
+            <label className="block text-[#919294] text-sm mb-2 font-semibold">
+              Payment Details
+            </label>
+            {data.payments && data.payments.length > 0 ? (
+              <div className="space-y-2 mb-2">
+                {data.payments.map((payment, index) => (
+                  <div key={index} className="bg-[#1a1a1a] border border-[#919294]/30 p-3 rounded-lg flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-gray-200">UPI ID: {payment.upi}</div>
+                      {payment.imgUrl && (
+                        <img
+                          src={payment.imgUrl}
+                          alt="Payment QR"
+                          className="h-20 mt-2 rounded border border-[#152233]"
+                        />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="text-red-500 font-bold"
+                      onClick={() => {
+                        setData(prev => ({
+                          ...prev,
+                          payments: prev.payments.filter((_, idx) => idx !== index)
+                        }));
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400 mb-2">No payment methods added.</p>
+            )}
+            <button
+              type="button"
+              className="text-[#E16254] border border-[#E16254] px-3 py-1 rounded hover:bg-[#E16254]/10 transition"
+              onClick={() => { setOpenPayment(true) }}
+            >
+              + Add payments
+            </button>
+          </div>
+        )}
+
         {/* Description */}
         <div className="space-y-2 mb-5">
           <label className="text-sm text-[#919294]">Description</label>
@@ -342,6 +395,57 @@ function QRForm() {
           </div>
         </div>
 
+
+        {/* Links */}
+        <div className="mb-5">
+          <label className="block text-[#ECE8E7] mb-2 font-semibold">Important Links</label>
+          <p className="text-sm text-gray-400 mb-3">Add links to WhatsApp groups, Discord servers, or other resources.</p>
+          <div className="space-y-3">
+            {data.links && data.links.map((link, index) => (
+              <div key={index} className="flex flex-col sm:flex-row gap-3 bg-[#0b1220] p-3 rounded-lg border border-[#22303b]">
+                <input
+                  type="text"
+                  placeholder="Title (e.g., WhatsApp Group)"
+                  className="flex-1 bg-[#1a1a1a] border border-[#919294]/40 rounded-lg p-2 text-[#ECE8E7] focus:outline-none focus:ring-2 focus:ring-[#E16254]"
+                  value={link.title || ''}
+                  onChange={(e) => {
+                    const newLinks = [...data.links];
+                    if (typeof newLinks[index] === 'string') newLinks[index] = { title: '', url: newLinks[index] };
+                    newLinks[index].title = e.target.value;
+                    setData(prev => ({ ...prev, links: newLinks }));
+                  }}
+                />
+                <input
+                  type="text"
+                  placeholder="URL (https://...)"
+                  className="flex-[2] bg-[#1a1a1a] border border-[#919294]/40 rounded-lg p-2 text-[#ECE8E7] focus:outline-none focus:ring-2 focus:ring-[#E16254]"
+                  value={link.url || (typeof link === 'string' ? link : '')}
+                  onChange={(e) => {
+                    const newLinks = [...data.links];
+                    if (typeof newLinks[index] === 'string') newLinks[index] = { title: '', url: newLinks[index] };
+                    newLinks[index].url = e.target.value;
+                    setData(prev => ({ ...prev, links: newLinks }));
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setData(prev => ({ ...prev, links: prev.links.filter((_, i) => i !== index) }))}
+                  className="text-red-400 hover:text-red-500 font-bold px-2"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setData(prev => ({ ...prev, links: [...(prev.links || []), { title: '', url: '' }] }))}
+              className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium"
+            >
+              + Add Link
+            </button>
+          </div>
+        </div>
+
         {/* Custom Fields */}
         <div className="space-y-2 mb-5">
           <label className="text-sm text-[#919294]">Custom participant fields</label>
@@ -426,6 +530,7 @@ function QRForm() {
         </div>
       </form>
       {openOther && <Popup prop={{ setData, setOpenOther }} />}
+      {openPayment && <Payment_Popup prop={{ setData, setOpenPayment }} />}
     </div>
   );
 }
@@ -456,6 +561,104 @@ function Popup({ prop }) {
       </div>
     </div>
   );
+
 }
+
+function Payment_Popup({ prop }) {
+  const wid = useRef();
+  const [data, setData] = useState({ upi: '', imgUrl: '' });
+
+  useEffect(() => {
+    if (typeof cloudinary === 'undefined') return;
+    if (wid.current) return;
+
+    const widget = cloudinary.createUploadWidget(
+      {
+        cloudName: 'dfseckyjx',
+        uploadPreset: 'qbvu3y5j',
+        multiple: false,
+      },
+      (error, result) => {
+        if (error) console.log(error);
+        if (!error && result && result.event === 'success') {
+          const url = result.info.secure_url;
+          console.log(url);
+          setData(prev => ({ ...prev, imgUrl: url }));
+        }
+      }
+    );
+    wid.current = widget;
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={() => prop.setOpenPayment(false)}
+      />
+
+      {/* Modal */}
+      <div className="relative bg-[#0b1220] border border-[#22303b] text-gray-100 p-6 rounded-lg w-full max-w-md shadow-xl">
+        <h3 className="text-lg font-semibold mb-3">Add payment</h3>
+
+        {/* UPI ID */}
+        <label className="block text-sm text-gray-300 mb-1">UPI ID</label>
+        <input
+          type="text"
+          placeholder="e.g., username@upi"
+          className="w-full mb-3 p-2 rounded bg-[#07101a] border border-[#152233]"
+          value={data.upi}
+          onChange={e =>
+            setData(prev => ({ ...prev, upi: e.target.value }))
+          }
+        />
+
+        {/* QR Code */}
+        <label className="block text-sm text-gray-300 mb-1">QR Code</label>
+        <button
+          type="button"
+          className="mb-3 px-3 py-1 rounded bg-indigo-600 text-white"
+          onClick={() => wid.current && wid.current.open()}
+        >
+          Upload QR
+        </button>
+
+        {data.imgUrl && (
+          <div className="mb-3">
+            <img
+              src={data.imgUrl}
+              alt="UPI QR"
+              className="h-32 object-contain rounded border border-[#152233]"
+            />
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex justify-end gap-2">
+          <button
+            className="px-3 py-1 rounded bg-transparent border border-gray-600"
+            onClick={() => prop.setOpenPayment(false)}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-3 py-1 rounded bg-indigo-600 text-white"
+            onClick={() => {
+              prop.setData(prev => {
+                const updatedPayments = [...(prev.payments || []), data];
+                return { ...prev, payments: updatedPayments };
+              });
+              prop.setOpenPayment(false);
+            }}
+          >
+            Add payment
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 export default QRForm;

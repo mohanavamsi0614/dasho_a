@@ -1,9 +1,10 @@
 import api from "../lib/api";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import socket from "@/lib/socket";
 function QrDashboard() {
   const { event } = useParams();
+  const nav = useNavigate();
   const [eventData, setEventData] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -54,6 +55,13 @@ function QrDashboard() {
                 }`}
             >
               {eventData.event?.status ? "Close Event" : "Open Event"}
+            </button>
+
+            <button
+              onClick={() => nav("/payment/" + event)}
+              className="px-5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 font-medium transition-all duration-200 text-white"
+            >
+              Payments
             </button>
 
             <button

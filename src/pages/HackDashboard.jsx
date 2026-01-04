@@ -32,7 +32,6 @@ function HackDashboard() {
     socket.emit("closeEvent", event)
   }
   const onOpen = () => {
-    console.log(eventData)
     setEventData((prev) => {
       if (!prev) return prev;
       return { ...prev, event: { ...prev.event, status: "open" } };
@@ -40,7 +39,6 @@ function HackDashboard() {
   };
 
   const onClosed = () => {
-    console.log(eventData)
     setEventData((prev) => {
       if (!prev) return prev;
       return { ...prev, event: { ...prev.event, status: "closed" } };
@@ -49,6 +47,9 @@ function HackDashboard() {
 
   socket.on("eventOpen", onOpen);
   socket.on("eventClosed", onClosed);
+  socket.on("autoUpdate", (val) => {
+    setEventData(prev => prev ? ({ ...prev, event: { ...prev.event, auto_payment_mail: val } }) : prev)
+  });
 
   const downloadCSV = () => {
     if (!eventData || !eventData.event_og) return;
@@ -112,9 +113,33 @@ function HackDashboard() {
     <div className="min-h-screen font-poppins bg-[#212121] text-white p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white opacity-70">Hackathon Dashboard</h1>
-        <a href={`https://dashoo-p.vercel.app/teampanel/${event}`} target="_blank">  <div className=" bg-red-500 text-white p-2 rounded-xl cursor-pointer">TeamPanel Link</div>
-        </a>
-        <div className="flex gap-4">
+
+        <div className="flex gap-4 items-center">
+          {/* Team Panel Link */}
+          <a
+            href={`https://dashoo-p.vercel.app/teampanel/${event}`}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-medium transition-all shadow-md flex items-center gap-2"
+          >
+            <span>TeamPanel</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+
+          {/* Auto Payment Toggle */}
+          <button
+            onClick={() => socket.emit("auto", { event, auto: !eventData?.event?.auto_payment_mail })}
+            className={`px-5 py-2 rounded-xl font-medium transition-all duration-300 shadow-md border ${eventData?.event?.auto_payment_mail
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/20"
+              : "bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700"
+              }`}
+          >
+            Auto Mail: {eventData?.event?.auto_payment_mail ? "ON" : "OFF"}
+          </button>
+
+          {/* Open/Close Event */}
           <button
             onClick={eventData?.event?.status == "open" ? closeEvent : openEvent}
             className={`px-6 py-2 rounded-xl font-medium shadow-md transition-all duration-300 ${eventData?.event?.status == "open"
@@ -124,6 +149,7 @@ function HackDashboard() {
           >
             {eventData?.event?.status == "open" ? "Close Event" : "Open Event"}
           </button>
+
           <button
             onClick={downloadCSV}
             className="bg-[#E16254] hover:bg-[#c65248] text-white px-6 py-2 rounded-xl shadow-md transition-all duration-300"
@@ -134,78 +160,80 @@ function HackDashboard() {
       </div>
 
 
-      {eventData && eventData.event_og.length > 0 ? (
-        <div className="overflow-x-auto bg-[#111111] border border-gray-700 rounded-2xl shadow-lg">
-          <table className="min-w-full border-collapse">
-            <thead className="bg-[#1c1c1c] text-[#ECE8E7]">
-              <tr>
-                {[
-                  "Team",
-                  "Role",
-                  "Name",
-                  "Email",
-                  "Phone",
-                  "Roll",
-                  "College",
-                  "Attd 1",
-                  "Attd 2",
-                  "Attd 3",
-                ].map((h) => (
-                  <th key={h} className="p-3 font-semibold text-sm border-b border-gray-700">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {eventData.event_og.map((team) => (
-                <>
-                  <tr
-                    key={team._id + "-lead"}
-                    className="border-b border-gray-800 hover:bg-[#1c1c1c] transition-colors"
-                  >
-                    <td className="p-3 font-semibold text-[#ECE8E7]">
-                      {team.teamName}
-                    </td>
-                    <td className="p-3 text-[#E16254] font-medium">Lead</td>
-                    <td className="p-3">{team.lead.name}</td>
-                    <td className="p-3">{team.lead.email}</td>
-                    <td className="p-3">{team.lead.phone}</td>
-                    <td className="p-3">{team.lead.rollNumber}</td>
-                    <td className="p-3">{team.lead.college}</td>
-                    <td className="p-3">{team.lead["Attd-1"] || "P"}</td>
-                    <td className="p-3">{team.lead["Attd-2"] || "P"}</td>
-                    <td className="p-3">{team.lead["Attd-3"] || "P"}</td>
-                  </tr>
-
-                  {team.members.map((m, i) => (
-                    <tr
-                      key={team._id + "-member-" + i}
-                      className="border-b border-gray-800 hover:bg-[#1a1a1a] transition-colors"
-                    >
-                      <td className="p-3">{team.teamName}</td>
-                      <td className="p-3 text-gray-400">Member</td>
-                      <td className="p-3">{m.name}</td>
-                      <td className="p-3">{m.email}</td>
-                      <td className="p-3">{m.phone}</td>
-                      <td className="p-3">{m.rollNumber}</td>
-                      <td className="p-3">{m.college}</td>
-                      <td className="p-3">{m["Attd-1"] || "P"}</td>
-                      <td className="p-3">{m["Attd-2"] || "P"}</td>
-                      <td className="p-3">{m["Attd-3"] || "P"}</td>
-                    </tr>
+      {
+        eventData && eventData.event_og.length > 0 ? (
+          <div className="overflow-x-auto bg-[#111111] border border-gray-700 rounded-2xl shadow-lg">
+            <table className="min-w-full border-collapse">
+              <thead className="bg-[#1c1c1c] text-[#ECE8E7]">
+                <tr>
+                  {[
+                    "Team",
+                    "Role",
+                    "Name",
+                    "Email",
+                    "Phone",
+                    "Roll",
+                    "College",
+                    "Attd 1",
+                    "Attd 2",
+                    "Attd 3",
+                  ].map((h) => (
+                    <th key={h} className="p-3 font-semibold text-sm border-b border-gray-700">
+                      {h}
+                    </th>
                   ))}
-                </>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p className="text-center text-gray-500 mt-10 text-lg">
-          No teams found.
-        </p>
-      )}
-    </div>
+                </tr>
+              </thead>
+              <tbody>
+                {eventData.event_og.map((team) => (
+                  <>
+                    <tr
+                      key={team._id + "-lead"}
+                      className="border-b border-gray-800 hover:bg-[#1c1c1c] transition-colors"
+                    >
+                      <td className="p-3 font-semibold text-[#ECE8E7]">
+                        {team.teamName}
+                      </td>
+                      <td className="p-3 text-[#E16254] font-medium">Lead</td>
+                      <td className="p-3">{team.lead.name}</td>
+                      <td className="p-3">{team.lead.email}</td>
+                      <td className="p-3">{team.lead.phone}</td>
+                      <td className="p-3">{team.lead.rollNumber}</td>
+                      <td className="p-3">{team.lead.college}</td>
+                      <td className="p-3">{team.lead["Attd-1"] || "P"}</td>
+                      <td className="p-3">{team.lead["Attd-2"] || "P"}</td>
+                      <td className="p-3">{team.lead["Attd-3"] || "P"}</td>
+                    </tr>
+
+                    {team.members.map((m, i) => (
+                      <tr
+                        key={team._id + "-member-" + i}
+                        className="border-b border-gray-800 hover:bg-[#1a1a1a] transition-colors"
+                      >
+                        <td className="p-3">{team.teamName}</td>
+                        <td className="p-3 text-gray-400">Member</td>
+                        <td className="p-3">{m.name}</td>
+                        <td className="p-3">{m.email}</td>
+                        <td className="p-3">{m.phone}</td>
+                        <td className="p-3">{m.rollNumber}</td>
+                        <td className="p-3">{m.college}</td>
+                        <td className="p-3">{m["Attd-1"] || "P"}</td>
+                        <td className="p-3">{m["Attd-2"] || "P"}</td>
+                        <td className="p-3">{m["Attd-3"] || "P"}</td>
+                      </tr>
+                    ))}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-center text-gray-500 mt-10 text-lg">
+            No teams found.
+          </p>
+        )
+      }
+    </div >
   );
 }
 
