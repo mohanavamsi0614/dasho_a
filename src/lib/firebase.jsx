@@ -81,7 +81,7 @@ function Google() {
       .post("/admin/register", data)
       .then((res) => {
         localStorage.setItem("user", JSON.stringify(res.data.org));
-        nav("/profile");
+        window.location.href = "/profile";
       })
       .catch(() => alert("Registration failed"));
   };
@@ -96,7 +96,7 @@ function Google() {
             if (res.data.newOrg) setNewOrg(true);
             else {
               localStorage.setItem("user", JSON.stringify(res.data.org));
-              nav("/profile");
+              window.location.href = "/profile";
             }
           });
       })
