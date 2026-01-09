@@ -29,7 +29,7 @@ function Google() {
     website: "",
     address: "",
     contactName: "",
-    email: "",
+    contactEmail: "",
     contactPhone: "",
     description: "",
     imgUrl: "",
@@ -37,6 +37,7 @@ function Google() {
   });
 
   const [currentLink, setCurrentLink] = useState({ title: "", url: "" });
+  const [email, setEmail] = useState("")
 
   const addLink = () => {
     if (currentLink.title && currentLink.url) {
@@ -93,6 +94,7 @@ function Google() {
         api
           .post("/admin/auth", { email: user.email })
           .then((res) => {
+            setEmail(user.email)
             if (res.data.newOrg) setNewOrg(true);
             else {
               localStorage.setItem("user", JSON.stringify(res.data.org));
