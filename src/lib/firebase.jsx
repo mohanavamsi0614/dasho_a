@@ -94,7 +94,7 @@ function Google() {
         api
           .post("/admin/auth", { email: user.email })
           .then((res) => {
-            setEmail(user.email)
+            setEmail(user.email);
             if (res.data.newOrg) setNewOrg(true);
             else {
               localStorage.setItem("user", JSON.stringify(res.data.org));

@@ -8,6 +8,8 @@ function PaymentCard({ team, eventId }) {
     const [verified, setVerified] = useState(team.verified || false)
     const [reminderLoading, setReminderLoading] = useState(false)
 
+    const [showDetails, setShowDetails] = useState(false)
+
     function verifyPayment() {
         setVerifying(true)
         // Check if it's a team (has members/lead) or individual (QR event)
@@ -52,6 +54,91 @@ function PaymentCard({ team, eventId }) {
                     }`}>
                     {team.payment ? (verified ? "Verified" : "Paid (Pending)") : "Not Paid"}
                 </span>
+            </div>
+
+            {/* Team Details Section */}
+            <div className="mb-6 border-b border-gray-800 pb-4">
+                <button
+                    onClick={() => setShowDetails(!showDetails)}
+                    className="w-full flex items-center justify-between text-sm text-gray-400 hover:text-white transition-colors bg-[#1a1a1a] p-2 rounded-lg"
+                >
+                    <span className="font-medium">Team Details (Lead & Members)</span>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className={`h-4 w-4 transition-transform duration-200 ${showDetails ? "rotate-180" : ""}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                {showDetails && (
+                    <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {/* Lead Details */}
+                        {team.lead && (
+                            <div className="bg-[#1a1a1a]/50 p-3 rounded-lg border border-gray-800/50">
+                                <h3 className="text-xs uppercase tracking-wider text-[#E16254] font-bold mb-2">Team Lead</h3>
+                                <div className="grid grid-cols-1 gap-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Name:</span>
+                                        <span className="text-gray-200 font-medium">{team.lead.name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Email:</span>
+                                        <span className="text-gray-200 font-mono text-xs">{team.lead.email}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Phone:</span>
+                                        <span className="text-gray-200">{team.lead.phone}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Roll:</span>
+                                        <span className="text-gray-200">{team.lead.rollNumber}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">College:</span>
+                                        <span className="text-gray-200 text-right truncate ml-2">{team.lead.college}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Members Details */}
+                        {team.members && team.members.length > 0 && (
+                            <div className="space-y-2">
+                                <h3 className="text-xs uppercase tracking-wider text-gray-400 font-bold px-1">Members ({team.members.length})</h3>
+                                {team.members.map((member, idx) => (
+                                    <div key={idx} className="bg-[#1a1a1a]/50 p-3 rounded-lg border border-gray-800/50">
+                                        <div className="grid grid-cols-1 gap-1 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Name:</span>
+                                                <span className="text-gray-300">{member.name}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Email:</span>
+                                                <span className="text-gray-400 font-mono text-xs">{member.email}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Phone:</span>
+                                                <span className="text-gray-400">{member.phone}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Roll:</span>
+                                                <span className="text-gray-400">{member.rollNumber}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">College:</span>
+                                                <span className="text-gray-400 text-right truncate ml-2">{member.college}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {team.payment ? (
