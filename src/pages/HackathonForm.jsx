@@ -203,12 +203,12 @@ function HackthonForm() {
           </div>
           {/* Cost */}
           <div>
-            <label className="block text-[#ECE8E7] mb-1 font-semibold">Cost per team</label>
+            <label className="block text-[#ECE8E7] mb-1 font-semibold">Cost per person</label>
             <input
               className="w-full bg-[#1a1a1a] border border-[#919294]/40 rounded-lg p-2 text-[#ECE8E7] focus:outline-none focus:ring-2 focus:ring-[#E16254]"
               value={data.cost}
               onChange={e => setData(prev => ({ ...prev, cost: e.target.value }))}
-              placeholder="Cost or entry fee (if any or else 0) "
+              placeholder="Cost per participant (0 for free)"
             />
           </div>
           {/* Prize */}
@@ -449,25 +449,53 @@ function Popup({ prop }) {
   const [data, setData] = useState({ title: '', type: 'text' });
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => prop.setopen(false)} />
-      <div className="relative bg-[#071021] border border-[#112034] text-gray-100 p-6 rounded-lg w-full max-w-md shadow-xl">
-        <h3 className="text-lg font-semibold mb-3">Add custom field</h3>
-        <label className="block text-sm text-gray-300 mb-1">Field title</label>
-        <input type="text" placeholder="e.g., GitHub URL" className="w-full mb-3 p-2 rounded bg-[#07101a] border border-[#152233]" onChange={(e) => { setData(prev => ({ ...prev, title: e.target.value })) }} />
-        <label className="block text-sm text-gray-300 mb-1">Field type</label>
-        <select className="w-full mb-4 p-2 rounded bg-[#07101a] border border-[#152233]" value={data.type} onChange={(e) => { setData(prev => ({ ...prev, type: e.target.value })) }}>
-          <option value="FT">For Team</option>
-          <option value="EP">For each participant</option>
-        </select>
-        <div className="flex justify-end gap-2">
-          <button className="px-3 py-1 rounded bg-transparent border border-gray-600" onClick={() => prop.setopen(false)}>Cancel</button>
-          <button className="px-3 py-1 rounded bg-indigo-600 text-white" onClick={() => {
-            prop.setData((prev) => {
-              const updatedOther = [...prev.other, data];
-              return { ...prev, other: updatedOther };
-            })
-            prop.setopen(false);
-          }}>Add field</button>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => prop.setopen(false)} />
+      <div className="relative bg-[#0b1220] border border-[#22303b] text-gray-100 p-6 rounded-xl w-full max-w-md shadow-2xl transform transition-all scale-100">
+        <h3 className="text-xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400">Add custom field</h3>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1 font-medium">Field title</label>
+            <input
+              type="text"
+              placeholder="e.g., GitHub URL"
+              className="w-full bg-[#1a1a1a] border border-[#2d3748] rounded-lg p-2.5 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              onChange={(e) => { setData(prev => ({ ...prev, title: e.target.value })) }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1 font-medium">Field type</label>
+            <select
+              className="w-full bg-[#1a1a1a] border border-[#2d3748] rounded-lg p-2.5 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all appearance-none"
+              value={data.type}
+              onChange={(e) => { setData(prev => ({ ...prev, type: e.target.value })) }}
+            >
+              <option value="FT">For Team</option>
+              <option value="EP">For each participant</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            className="px-4 py-2 rounded-lg bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800 transition-colors"
+            onClick={() => prop.setopen(false)}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5"
+            onClick={() => {
+              prop.setData((prev) => {
+                const updatedOther = [...prev.other, data];
+                return { ...prev, other: updatedOther };
+              })
+              prop.setopen(false);
+            }}
+          >
+            Add field
+          </button>
         </div>
       </div>
     </div>
@@ -503,20 +531,20 @@ function Payment_Popup({ prop }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={() => prop.setopenPayment(false)}
       />
 
       {/* Modal */}
-      <div className="relative bg-[#071021] border border-[#112034] text-gray-100 p-6 rounded-lg w-full max-w-md shadow-xl">
-        <h3 className="text-lg font-semibold mb-3">Add payment</h3>
+      <div className="relative bg-[#0b1220] border border-[#22303b] text-gray-100 p-6 rounded-xl w-full max-w-md shadow-2xl transform transition-all scale-100">
+        <h3 className="text-xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400">Add payment</h3>
 
         {/* UPI ID */}
-        <label className="block text-sm text-gray-300 mb-1">UPI ID</label>
+        <label className="block text-sm text-gray-400 mb-1 font-medium">UPI ID</label>
         <input
           type="text"
           placeholder="e.g., username@upi"
-          className="w-full mb-3 p-2 rounded bg-[#07101a] border border-[#152233]"
+          className="w-full mb-4 bg-[#1a1a1a] border border-[#2d3748] rounded-lg p-2.5 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
           value={data.upi}
           onChange={e =>
             setData(prev => ({ ...prev, upi: e.target.value }))
@@ -524,35 +552,66 @@ function Payment_Popup({ prop }) {
         />
 
         {/* QR Code */}
-        <label className="block text-sm text-gray-300 mb-1">QR Code</label>
+        <label className="block text-sm text-gray-400 mb-1 font-medium">QR Code</label>
         <button
           type="button"
-          className="mb-3 px-3 py-1 rounded bg-indigo-600 text-white"
+          className="mb-4 px-4 py-2 rounded-lg bg-[#1a1a1a] border border-[#2d3748] hover:bg-[#2d3748] text-gray-200 transition-colors w-full text-left flex items-center justify-between"
           onClick={() => wid.current && wid.current.open()}
         >
-          Upload QR
+          <span>{data.imgUrl ? 'Change QR Image' : 'Upload QR Image'}</span>
+          <span className="text-indigo-400 text-sm">Upload</span>
         </button>
 
+        <div className="space-y-3 mt-4 border-t border-[#152233] pt-4">
+          <h2 className="text-gray-300 font-semibold">Bank details (optional)</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              placeholder='Bank name'
+              className="w-full bg-[#1a1a1a] border border-[#2d3748] rounded-lg p-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              onChange={(e) => setData(prev => ({ ...prev, bankName: e.target.value }))}
+              value={data.bankName}
+            />
+            <input
+              placeholder='Account number'
+              className="w-full bg-[#1a1a1a] border border-[#2d3748] rounded-lg p-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              onChange={(e) => setData(prev => ({ ...prev, accountNumber: e.target.value }))}
+              value={data.accountNumber}
+            />
+            <input
+              placeholder='IFSC code'
+              className="w-full bg-[#1a1a1a] border border-[#2d3748] rounded-lg p-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              onChange={(e) => setData(prev => ({ ...prev, ifscCode: e.target.value }))}
+              value={data.ifscCode}
+            />
+            <input
+              placeholder='Account Name'
+              className="w-full bg-[#1a1a1a] border border-[#2d3748] rounded-lg p-2 text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              onChange={(e) => setData(prev => ({ ...prev, accountName: e.target.value }))}
+              value={data.accountName}
+            />
+          </div>
+        </div>
+
         {data.imgUrl && (
-          <div className="mb-3">
+          <div className="mb-4 mt-3 flex justify-center">
             <img
               src={data.imgUrl}
               alt="UPI QR"
-              className="h-32 object-contain rounded border border-[#152233]"
+              className="h-32 object-contain rounded-lg border border-[#2d3748]"
             />
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-3 mt-6">
           <button
-            className="px-3 py-1 rounded bg-transparent border border-gray-600"
+            className="px-4 py-2 rounded-lg bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800 transition-colors"
             onClick={() => prop.setopenPayment(false)}
           >
             Cancel
           </button>
           <button
-            className="px-3 py-1 rounded bg-indigo-600 text-white"
+            className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/20 transition-all hover:-translate-y-0.5"
             onClick={() => {
               prop.setData(prev => {
                 const updatedPayments = [...(prev.payments || []), data];

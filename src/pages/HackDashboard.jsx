@@ -54,22 +54,38 @@ function HackDashboard() {
   const downloadCSV = () => {
     if (!eventData || !eventData.event_og) return;
 
-    let csvRows = [
-      [
-        "Team Name",
-        "Role",
-        "Name",
-        "Email",
-        "Phone",
-        "Roll Number",
-        "College",
-        "Attd-1",
-        "Attd-2",
-        "Attd-3",
-      ],
+    // Base headers
+    let headers = [
+      "Team Name",
+      "Role",
+      "Name",
+      "Email",
+      "Phone",
+      "Roll Number",
+      "College",
     ];
 
+    // Add custom field headers
+    if (eventData.event?.other) {
+      eventData.event.other.forEach(f => headers.push(f.title));
+    }
+
+    // Add remaining headers
+    headers.push("Payment Status", "UPI", "Verified", "Marks", "Attd-1", "Attd-2", "Attd-3");
+
+    let csvRows = [headers];
+
     eventData.event_og.forEach((team) => {
+      // Helper to extract custom values
+      const getCustomValues = (person) => {
+        if (!eventData.event?.other) return [];
+        return eventData.event.other.map(f => person[f.title] || "-");
+      };
+
+      // Helper to format marks
+      const marksStr = team.marks ? team.marks.map(m => `${m.name}: ${m.total}`).join(" | ") : "-";
+
+      // Lead Row
       csvRows.push([
         team.teamName,
         "Lead",
@@ -78,11 +94,17 @@ function HackDashboard() {
         team.lead.phone || "",
         team.lead.rollNumber || "",
         team.lead.college || "",
-        team.lead["Attd-1"] || "",
-        team.lead["Attd-2"] || "",
-        team.lead["Attd-3"] || "",
+        ...getCustomValues(team.lead),
+        team.payment ? "Paid" : "Pending",
+        team.paymentDetails?.upi || "-",
+        team.verified ? "Yes" : "No",
+        marksStr,
+        team.lead.attd?.attd_1?.status || "Absent",
+        team.lead.attd?.attd_2?.status || "Absent",
+        team.lead.attd?.attd_3?.status || "Absent",
       ]);
 
+      // Member Rows
       team.members.forEach((m) => {
         csvRows.push([
           team.teamName,
@@ -92,9 +114,14 @@ function HackDashboard() {
           m.phone || "",
           m.rollNumber || "",
           m.college || "",
-          m["Attd-1"] || "",
-          m["Attd-2"] || "",
-          m["Attd-3"] || "",
+          ...getCustomValues(m),
+          "-", // Payment Status (Team level)
+          "-", // UPI
+          "-", // Verified
+          "-", // Marks
+          m.attd?.attd_1?.status || "Absent",
+          m.attd?.attd_2?.status || "Absent",
+          m.attd?.attd_3?.status || "Absent",
         ]);
       });
     });
@@ -174,11 +201,26 @@ function HackDashboard() {
                     "Phone",
                     "Roll",
                     "College",
+                  ].map((h) => (
+                    <th key={h} className="p-3 font-semibold text-sm border-b border-gray-700 min-w-[120px]">
+                      {h}
+                    </th>
+                  ))}
+                  {/* Custom Fields Headers */}
+                  {eventData.event?.other?.map((f, i) => (
+                    <th key={i} className="p-3 font-semibold text-sm border-b border-gray-700 min-w-[120px] whitespace-nowrap">
+                      {f.title}
+                    </th>
+                  ))}
+                  {[
+                    "Payment",
+                    "Verified",
+                    "Marks",
                     "Attd 1",
                     "Attd 2",
                     "Attd 3",
                   ].map((h) => (
-                    <th key={h} className="p-3 font-semibold text-sm border-b border-gray-700">
+                    <th key={h} className="p-3 font-semibold text-sm border-b border-gray-700 min-w-[100px]">
                       {h}
                     </th>
                   ))}
@@ -191,18 +233,72 @@ function HackDashboard() {
                       key={team._id + "-lead"}
                       className="border-b border-gray-800 hover:bg-[#1c1c1c] transition-colors"
                     >
-                      <td className="p-3 font-semibold text-[#ECE8E7]">
+                      <td className="p-3 font-semibold text-[#ECE8E7] sticky left-0 bg-[#1c1c1c]">
                         {team.teamName}
                       </td>
                       <td className="p-3 text-[#E16254] font-medium">Lead</td>
                       <td className="p-3">{team.lead.name}</td>
-                      <td className="p-3">{team.lead.email}</td>
+                      <td className="p-3 font-mono text-sm text-gray-400">{team.lead.email}</td>
                       <td className="p-3">{team.lead.phone}</td>
                       <td className="p-3">{team.lead.rollNumber}</td>
                       <td className="p-3">{team.lead.college}</td>
-                      <td className="p-3">{team.lead["Attd-1"] || "P"}</td>
-                      <td className="p-3">{team.lead["Attd-2"] || "P"}</td>
-                      <td className="p-3">{team.lead["Attd-3"] || "P"}</td>
+
+                      {/* Custom Fields for Lead */}
+                      {eventData.event?.other?.map((f, i) => (
+                        <td key={i} className="p-3 text-gray-300">
+                          {team.lead[f.title] || "-"}
+                        </td>
+                      ))}
+
+                      {/* Payment */}
+                      <td className="p-3">
+                        <div className="flex flex-col gap-1">
+                          <span className={`text-xs px-2 py-0.5 rounded w-fit ${team.payment ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {team.payment ? "Paid" : "Pending"}
+                          </span>
+                          {team.paymentDetails?.upi && <span className="text-xs text-gray-500">{team.paymentDetails.upi}</span>}
+                          {team.paymentDetails?.imgUrl && (
+                            <a href={team.paymentDetails.imgUrl} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:underline">View QR</a>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Verified */}
+                      <td className="p-3">
+                        <span className={`text-xs px-2 py-0.5 rounded ${team.verified ? 'bg-indigo-500/20 text-indigo-400' : 'bg-gray-800 text-gray-500'}`}>
+                          {team.verified ? "Yes" : "No"}
+                        </span>
+                      </td>
+
+                      {/* Marks */}
+                      <td className="p-3">
+                        {team.marks && team.marks.length > 0 ? (
+                          <div className="text-xs space-y-1">
+                            {team.marks.map((m, idx) => (
+                              <div key={idx} className="whitespace-nowrap">
+                                <span className="text-gray-400">{m.name}:</span> <span className="text-gray-200">{m.total}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : "-"}
+                      </td>
+
+                      {/* Attendance */}
+                      <td className="p-3">
+                        <span className={`${team.lead.attd?.attd_1?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
+                          {team.lead.attd?.attd_1?.status || "-"}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className={`${team.lead.attd?.attd_2?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
+                          {team.lead.attd?.attd_2?.status || "-"}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className={`${team.lead.attd?.attd_3?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
+                          {team.lead.attd?.attd_3?.status || "-"}
+                        </span>
+                      </td>
                     </tr>
 
                     {team.members.map((m, i) => (
@@ -210,16 +306,41 @@ function HackDashboard() {
                         key={team._id + "-member-" + i}
                         className="border-b border-gray-800 hover:bg-[#1a1a1a] transition-colors"
                       >
-                        <td className="p-3">{team.teamName}</td>
-                        <td className="p-3 text-gray-400">Member</td>
+                        <td className="p-3 opacity-50 sticky left-0 bg-[#1a1a1a]">"</td>
+                        <td className="p-3 text-gray-500 text-sm">Member</td>
                         <td className="p-3">{m.name}</td>
-                        <td className="p-3">{m.email}</td>
+                        <td className="p-3 font-mono text-sm text-gray-500">{m.email}</td>
                         <td className="p-3">{m.phone}</td>
                         <td className="p-3">{m.rollNumber}</td>
                         <td className="p-3">{m.college}</td>
-                        <td className="p-3">{m["Attd-1"] || "P"}</td>
-                        <td className="p-3">{m["Attd-2"] || "P"}</td>
-                        <td className="p-3">{m["Attd-3"] || "P"}</td>
+
+                        {/* Custom Fields for Member */}
+                        {eventData.event?.other?.map((f, idx) => (
+                          <td key={idx} className="p-3 text-gray-300">
+                            {m[f.title] || "-"}
+                          </td>
+                        ))}
+
+                        <td className="p-3 text-gray-600 text-xs">-</td>
+                        <td className="p-3 text-gray-600 text-xs">-</td>
+                        <td className="p-3 text-gray-600 text-xs">-</td>
+
+                        {/* Attendance (Member) */}
+                        <td className="p-3">
+                          <span className={`${m.attd?.attd_1?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
+                            {m.attd?.attd_1?.status || "-"}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <span className={`${m.attd?.attd_2?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
+                            {m.attd?.attd_2?.status || "-"}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <span className={`${m.attd?.attd_3?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
+                            {m.attd?.attd_3?.status || "-"}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </>
