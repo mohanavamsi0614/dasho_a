@@ -233,6 +233,9 @@ function HackDashboard() {
           <p className="text-gray-400 text-sm mt-1">
             Total Teams: <span className="text-white font-bold">{teams.length}</span>
           </p>
+          <p>
+            Total Members: <span className="text-white font-bold">{teams.reduce((acc, team) => acc + team.members.length, 0) + teams.length}</span>
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-3 items-center justify-center">
