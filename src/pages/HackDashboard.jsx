@@ -269,11 +269,11 @@ function HackDashboard() {
               })
             }
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-md border ${eventData?.event?.auto_payment_mail
-                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/20"
-                : "bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700"
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/20"
+              : "bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700"
               }`}
           >
-            Auto Mail: {eventData?.event?.auto_payment_mail ? "ON" : "OFF"}
+            Auto Mail: Is {eventData?.event?.auto_payment_mail ? "ON" : "OFF"}
           </button>
 
           {/* Open/Close Event */}
@@ -282,8 +282,8 @@ function HackDashboard() {
               eventData?.event?.status == "open" ? closeEvent : openEvent
             }
             className={`px-4 py-2 rounded-xl text-sm font-medium shadow-md transition-all ${eventData?.event?.status == "open"
-                ? "bg-red-600 hover:bg-red-700 text-white"
-                : "bg-green-600 hover:bg-green-700 text-white"
+              ? "bg-red-600 hover:bg-red-700 text-white"
+              : "bg-green-600 hover:bg-green-700 text-white"
               }`}
           >
             {eventData?.event?.status == "open"
@@ -366,16 +366,16 @@ function HackDashboard() {
                 <div className="flex flex-wrap gap-2 text-xs">
                   <span
                     className={`px-2 py-0.5 rounded border ${team.verified
-                        ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
-                        : "bg-gray-800 text-gray-500 border-gray-700"
+                      ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                      : "bg-gray-800 text-gray-500 border-gray-700"
                       }`}
                   >
                     Verified: {team.verified ? "Yes" : "No"}
                   </span>
                   <span
                     className={`px-2 py-0.5 rounded border ${team.payment
-                        ? "bg-green-500/10 text-green-400 border-green-500/20"
-                        : "bg-red-500/10 text-red-400 border-red-500/20"
+                      ? "bg-green-500/10 text-green-400 border-green-500/20"
+                      : "bg-red-500/10 text-red-400 border-red-500/20"
                       }`}
                   >
                     Payment: {team.payment ? "Paid" : "Pending"}

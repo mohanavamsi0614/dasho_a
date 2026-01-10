@@ -90,7 +90,6 @@ function Payment() {
         }
     }
 
-    // Edit Team State
     const [editingTeam, setEditingTeam] = useState(null)
 
     const handleUpdateTeam = async () => {
