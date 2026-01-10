@@ -36,7 +36,6 @@ function Payment() {
     }
 
 
-    // Payment Management State
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [newPayment, setNewPayment] = useState({
         bankName: "",

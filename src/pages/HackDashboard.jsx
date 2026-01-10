@@ -125,11 +125,23 @@ function HackDashboard() {
         ]);
       });
     });
-
     const csvString = csvRows.map((r) => r.join(",")).join("\n");
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     saveAs(blob, `Hackathon-${event}.csv`);
   };
+  const handleDeleteTeam = async (teamId) => {
+    if (!confirm("Are you sure you want to delete this team? This action cannot be undone.")) return
+
+    try {
+      await api.delete(`/admin/team/delete/${event}/${teamId}`)
+      setTeams(prev => prev.filter(t => t._id !== teamId))
+      console.log("Team deleted successfully")
+    } catch (error) {
+      console.error("Error deleting team:", error)
+      alert("Failed to delete team")
+    }
+  }
+
 
   if (loading)
     return (
@@ -185,8 +197,7 @@ function HackDashboard() {
           </button>
         </div>
       </div>
-
-
+      <div className="flex items-center justify-between"><h1>Total Teams:{eventData?.event_og?.length}</h1></div>
       {
         eventData && eventData.event_og.length > 0 ? (
           <div className="overflow-x-auto bg-[#111111] border border-gray-700 rounded-2xl shadow-lg">
@@ -234,7 +245,20 @@ function HackDashboard() {
                       className="border-b border-gray-800 hover:bg-[#1c1c1c] transition-colors"
                     >
                       <td className="p-3 font-semibold text-[#ECE8E7] sticky left-0 bg-[#1c1c1c]">
-                        {team.teamName}
+                        <div>
+                          {team.teamName}
+
+                          <button
+                            onClick={() => handleDeleteTeam(team._id)}
+                            className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-200"
+                            title="Delete Team"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+
                       </td>
                       <td className="p-3 text-[#E16254] font-medium">Lead</td>
                       <td className="p-3">{team.lead.name}</td>

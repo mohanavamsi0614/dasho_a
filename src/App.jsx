@@ -50,7 +50,7 @@ function AppContent() {
         <Route path='/hackthon' element={<ProtectedRoute><HackathonForm /></ProtectedRoute>} />
         <Route path='/qr/scanner/:event' element={<QRScanner />} />
         <Route path='/dashboard/qr/:event' element={<QRDashboard />} />
-        <Route path='/dashboard/hack/:event' element={<ProtectedRoute><HackDashboard /></ProtectedRoute>} />
+        <Route path='/dashboard/hack/:event' element={<><HackDashboard /></>} />
         <Route path='/attd/:event' element={<ProtectedRoute><Attd /></ProtectedRoute>} />
         <Route path='/attd/hack/:event' element={<ProtectedRoute><HackAttd /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
