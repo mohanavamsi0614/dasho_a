@@ -3,34 +3,40 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { saveAs } from "file-saver";
 import socket from "@/lib/socket";
+
 function HackDashboard() {
   const { event } = useParams();
   const [eventData, setEventData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [teams, setTeams] = useState([]); // Local state for immediate UI updates
+
+  const [editingTeam, setEditingTeam] = useState(null);
+  const [expandedTeamId, setExpandedTeamId] = useState(null);
 
   useEffect(() => {
     api
       .get("/admin/event/" + event)
       .then((res) => {
         setEventData(res.data);
-        console.log(res.data)
+        setTeams(res.data.event_og || []);
+        console.log(res.data);
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
         setLoading(false);
       });
-    socket.emit("join", [event])
-
+    socket.emit("join", [event]);
   }, [event]);
 
   const openEvent = async () => {
-    socket.emit("openEvent", event)
-  }
+    socket.emit("openEvent", event);
+  };
 
   const closeEvent = async () => {
-    socket.emit("closeEvent", event)
-  }
+    socket.emit("closeEvent", event);
+  };
+
   const onOpen = () => {
     setEventData((prev) => {
       if (!prev) return prev;
@@ -48,11 +54,15 @@ function HackDashboard() {
   socket.on("eventOpen", onOpen);
   socket.on("eventClosed", onClosed);
   socket.on("autoUpdate", (val) => {
-    setEventData(prev => prev ? ({ ...prev, event: { ...prev.event, auto_payment_mail: val } }) : prev)
+    setEventData((prev) =>
+      prev
+        ? { ...prev, event: { ...prev.event, auto_payment_mail: val } }
+        : prev
+    );
   });
 
   const downloadCSV = () => {
-    if (!eventData || !eventData.event_og) return;
+    if (!eventData || !teams) return;
 
     // Base headers
     let headers = [
@@ -67,23 +77,33 @@ function HackDashboard() {
 
     // Add custom field headers
     if (eventData.event?.other) {
-      eventData.event.other.forEach(f => headers.push(f.title));
+      eventData.event.other.forEach((f) => headers.push(f.title));
     }
 
     // Add remaining headers
-    headers.push("Payment Status", "UPI", "Verified", "Marks", "Attd-1", "Attd-2", "Attd-3");
+    headers.push(
+      "Payment Status",
+      "UPI",
+      "Verified",
+      "Marks",
+      "Attd-1",
+      "Attd-2",
+      "Attd-3"
+    );
 
     let csvRows = [headers];
 
-    eventData.event_og.forEach((team) => {
+    teams.forEach((team) => {
       // Helper to extract custom values
       const getCustomValues = (person) => {
         if (!eventData.event?.other) return [];
-        return eventData.event.other.map(f => person[f.title] || "-");
+        return eventData.event.other.map((f) => person[f.title] || "-");
       };
 
       // Helper to format marks
-      const marksStr = team.marks ? team.marks.map(m => `${m.name}: ${m.total}`).join(" | ") : "-";
+      const marksStr = team.marks
+        ? team.marks.map((m) => `${m.name}: ${m.total}`).join(" | ")
+        : "-";
 
       // Lead Row
       csvRows.push([
@@ -129,50 +149,128 @@ function HackDashboard() {
     const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
     saveAs(blob, `Hackathon-${event}.csv`);
   };
+
   const handleDeleteTeam = async (teamId) => {
-    if (!confirm("Are you sure you want to delete this team? This action cannot be undone.")) return
+    if (
+      !confirm(
+        "Are you sure you want to delete this team? This action cannot be undone."
+      )
+    )
+      return;
 
     try {
-      await api.delete(`/admin/team/delete/${event}/${teamId}`)
-      setTeams(prev => prev.filter(t => t._id !== teamId))
-      console.log("Team deleted successfully")
+      await api.delete(`/admin/team/delete/${event}/${teamId}`);
+      setTeams((prev) => prev.filter((t) => t._id !== teamId));
+      console.log("Team deleted successfully");
     } catch (error) {
-      console.error("Error deleting team:", error)
-      alert("Failed to delete team")
+      console.error("Error deleting team:", error);
+      alert("Failed to delete team");
     }
-  }
+  };
 
+  const handleUpdateTeam = async () => {
+    if (!editingTeam) return;
+
+    try {
+      const data = {
+        teamName: editingTeam.teamName || editingTeam.name,
+        lead: editingTeam.lead,
+        members: editingTeam.members,
+        payment: editingTeam.payment,
+        verified: editingTeam.verified,
+      };
+      const res = await api.put(
+        `/admin/team/update/${event}/${editingTeam._id}`,
+        data
+      );
+      // Update local state
+      setTeams((prev) =>
+        prev.map((t) => (t._id === editingTeam._id ? editingTeam : t))
+      );
+      setEditingTeam(null);
+      console.log("Team updated:", res.data);
+      alert("Team updated successfully");
+    } catch (error) {
+      console.error("Error updating team:", error);
+      alert("Failed to update team");
+    }
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditingTeam((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLeadChange = (e) => {
+    const { name, value } = e.target;
+    setEditingTeam((prev) => ({
+      ...prev,
+      lead: {
+        ...prev.lead,
+        [name]: value,
+      },
+    }));
+  };
 
   if (loading)
     return (
-      <p className="text-center text-gray-400 mt-10 text-lg">Loading...</p>
+      <div className="min-h-screen bg-[#212121] text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
     );
 
   return (
     <div className="min-h-screen font-poppins bg-[#212121] text-white p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-white opacity-70">Hackathon Dashboard</h1>
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-[#111] p-6 rounded-2xl border border-gray-800 shadow-xl">
+        <div>
+          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
+            Hackathon Dashboard
+          </h1>
+          <p className="text-gray-400 text-sm mt-1">
+            Total Teams: <span className="text-white font-bold">{teams.length}</span>
+          </p>
+        </div>
 
-        <div className="flex gap-4 items-center">
+        <div className="flex flex-wrap gap-3 items-center justify-center">
           {/* Team Panel Link */}
           <a
             href={`https://dashoo-p.vercel.app/teampanel/${event}`}
             target="_blank"
             rel="noreferrer"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-medium transition-all shadow-md flex items-center gap-2"
+            className="px-4 py-2 bg-[#2a2a2a] hover:bg-[#333] border border-gray-700 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
           >
             <span>TeamPanel</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
             </svg>
           </a>
 
           {/* Auto Payment Toggle */}
           <button
-            onClick={() => socket.emit("auto", { event, auto: !eventData?.event?.auto_payment_mail })}
-            className={`px-5 py-2 rounded-xl font-medium transition-all duration-300 shadow-md border ${eventData?.event?.auto_payment_mail
-              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/20"
-              : "bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700"
+            onClick={() =>
+              socket.emit("auto", {
+                event,
+                auto: !eventData?.event?.auto_payment_mail,
+              })
+            }
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-md border ${eventData?.event?.auto_payment_mail
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/20"
+                : "bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700"
               }`}
           >
             Auto Mail: {eventData?.event?.auto_payment_mail ? "ON" : "OFF"}
@@ -180,205 +278,364 @@ function HackDashboard() {
 
           {/* Open/Close Event */}
           <button
-            onClick={eventData?.event?.status == "open" ? closeEvent : openEvent}
-            className={`px-6 py-2 rounded-xl font-medium shadow-md transition-all duration-300 ${eventData?.event?.status == "open"
-              ? "bg-red-600 hover:bg-red-700 text-white"
-              : "bg-green-600 hover:bg-green-700 text-white"
+            onClick={
+              eventData?.event?.status == "open" ? closeEvent : openEvent
+            }
+            className={`px-4 py-2 rounded-xl text-sm font-medium shadow-md transition-all ${eventData?.event?.status == "open"
+                ? "bg-red-600 hover:bg-red-700 text-white"
+                : "bg-green-600 hover:bg-green-700 text-white"
               }`}
           >
-            {eventData?.event?.status == "open" ? "Close Event" : "Open Event"}
+            {eventData?.event?.status == "open"
+              ? "Close Event"
+              : "Open Event"}
           </button>
 
           <button
             onClick={downloadCSV}
-            className="bg-[#E16254] hover:bg-[#c65248] text-white px-6 py-2 rounded-xl shadow-md transition-all duration-300"
+            className="bg-[#E16254] hover:bg-[#c65248] text-white px-5 py-2 rounded-xl text-sm shadow-md transition-all flex items-center gap-2"
           >
-            Download CSV
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+            CSV
           </button>
         </div>
       </div>
-      <div className="flex items-center justify-between"><h1>Total Teams:{eventData?.event_og?.length}</h1></div>
-      {
-        eventData && eventData.event_og.length > 0 ? (
-          <div className="overflow-x-auto bg-[#111111] border border-gray-700 rounded-2xl shadow-lg">
-            <table className="min-w-full border-collapse">
-              <thead className="bg-[#1c1c1c] text-[#ECE8E7]">
-                <tr>
-                  {[
-                    "Team",
-                    "Role",
-                    "Name",
-                    "Email",
-                    "Phone",
-                    "Roll",
-                    "College",
-                  ].map((h) => (
-                    <th key={h} className="p-3 font-semibold text-sm border-b border-gray-700 min-w-[120px]">
-                      {h}
-                    </th>
-                  ))}
-                  {/* Custom Fields Headers */}
-                  {eventData.event?.other?.map((f, i) => (
-                    <th key={i} className="p-3 font-semibold text-sm border-b border-gray-700 min-w-[120px] whitespace-nowrap">
-                      {f.title}
-                    </th>
-                  ))}
-                  {[
-                    "Payment",
-                    "Verified",
-                    "Marks",
-                    "Attd 1",
-                    "Attd 2",
-                    "Attd 3",
-                  ].map((h) => (
-                    <th key={h} className="p-3 font-semibold text-sm border-b border-gray-700 min-w-[100px]">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {eventData.event_og.map((team) => (
-                  <>
-                    <tr
-                      key={team._id + "-lead"}
-                      className="border-b border-gray-800 hover:bg-[#1c1c1c] transition-colors"
+
+      {teams.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
+          {teams.map((team) => (
+            <div
+              key={team._id}
+              className="bg-[#1a1a1a] border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-all shadow-lg group flex flex-col"
+            >
+              {/* Card Header */}
+              <div className="p-5 border-b border-gray-800 bg-[#161616] relative">
+                <div className="flex justify-between items-start mb-2">
+                  <h2
+                    className="text-lg font-bold text-white truncate max-w-[70%]"
+                    title={team.teamName}
+                  >
+                    {team.teamName}
+                  </h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setEditingTeam(team)}
+                      className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all"
+                      title="Edit Team"
                     >
-                      <td className="p-3 font-semibold text-[#ECE8E7] sticky left-0 bg-[#1c1c1c]">
-                        <div>
-                          {team.teamName}
-
-                          <button
-                            onClick={() => handleDeleteTeam(team._id)}
-                            className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-200"
-                            title="Delete Team"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                          </button>
-                        </div>
-
-                      </td>
-                      <td className="p-3 text-[#E16254] font-medium">Lead</td>
-                      <td className="p-3">{team.lead.name}</td>
-                      <td className="p-3 font-mono text-sm text-gray-400">{team.lead.email}</td>
-                      <td className="p-3">{team.lead.phone}</td>
-                      <td className="p-3">{team.lead.rollNumber}</td>
-                      <td className="p-3">{team.lead.college}</td>
-
-                      {/* Custom Fields for Lead */}
-                      {eventData.event?.other?.map((f, i) => (
-                        <td key={i} className="p-3 text-gray-300">
-                          {team.lead[f.title] || "-"}
-                        </td>
-                      ))}
-
-                      {/* Payment */}
-                      <td className="p-3">
-                        <div className="flex flex-col gap-1">
-                          <span className={`text-xs px-2 py-0.5 rounded w-fit ${team.payment ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                            {team.payment ? "Paid" : "Pending"}
-                          </span>
-                          {team.paymentDetails?.upi && <span className="text-xs text-gray-500">{team.paymentDetails.upi}</span>}
-                          {team.paymentDetails?.imgUrl && (
-                            <a href={team.paymentDetails.imgUrl} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:underline">View QR</a>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Verified */}
-                      <td className="p-3">
-                        <span className={`text-xs px-2 py-0.5 rounded ${team.verified ? 'bg-indigo-500/20 text-indigo-400' : 'bg-gray-800 text-gray-500'}`}>
-                          {team.verified ? "Yes" : "No"}
-                        </span>
-                      </td>
-
-                      {/* Marks */}
-                      <td className="p-3">
-                        {team.marks && team.marks.length > 0 ? (
-                          <div className="text-xs space-y-1">
-                            {team.marks.map((m, idx) => (
-                              <div key={idx} className="whitespace-nowrap">
-                                <span className="text-gray-400">{m.name}:</span> <span className="text-gray-200">{m.total}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : "-"}
-                      </td>
-
-                      {/* Attendance */}
-                      <td className="p-3">
-                        <span className={`${team.lead.attd?.attd_1?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
-                          {team.lead.attd?.attd_1?.status || "-"}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <span className={`${team.lead.attd?.attd_2?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
-                          {team.lead.attd?.attd_2?.status || "-"}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <span className={`${team.lead.attd?.attd_3?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
-                          {team.lead.attd?.attd_3?.status || "-"}
-                        </span>
-                      </td>
-                    </tr>
-
-                    {team.members.map((m, i) => (
-                      <tr
-                        key={team._id + "-member-" + i}
-                        className="border-b border-gray-800 hover:bg-[#1a1a1a] transition-colors"
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
                       >
-                        <td className="p-3 opacity-50 sticky left-0 bg-[#1a1a1a]">"</td>
-                        <td className="p-3 text-gray-500 text-sm">Member</td>
-                        <td className="p-3">{m.name}</td>
-                        <td className="p-3 font-mono text-sm text-gray-500">{m.email}</td>
-                        <td className="p-3">{m.phone}</td>
-                        <td className="p-3">{m.rollNumber}</td>
-                        <td className="p-3">{m.college}</td>
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTeam(team._id)}
+                      className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"
+                      title="Delete Team"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span
+                    className={`px-2 py-0.5 rounded border ${team.verified
+                        ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                        : "bg-gray-800 text-gray-500 border-gray-700"
+                      }`}
+                  >
+                    Verified: {team.verified ? "Yes" : "No"}
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded border ${team.payment
+                        ? "bg-green-500/10 text-green-400 border-green-500/20"
+                        : "bg-red-500/10 text-red-400 border-red-500/20"
+                      }`}
+                  >
+                    Payment: {team.payment ? "Paid" : "Pending"}
+                  </span>
+                </div>
+              </div>
 
-                        {/* Custom Fields for Member */}
-                        {eventData.event?.other?.map((f, idx) => (
-                          <td key={idx} className="p-3 text-gray-300">
-                            {m[f.title] || "-"}
-                          </td>
+              {/* Card Body */}
+              <div className="p-5 space-y-4 flex-1">
+                {/* Lead Info */}
+                <div>
+                  <h3 className="text-xs uppercase font-bold text-gray-500 mb-2">
+                    Lead Details
+                  </h3>
+                  <div className="space-y-1 text-sm">
+                    <p className="flex justify-between">
+                      <span className="text-gray-400">Name:</span>
+                      <span className="text-gray-200">{team.lead.name}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-gray-400">Email:</span>
+                      <span className="text-gray-200 truncate ml-2 max-w-[150px]" title={team.lead.email}>{team.lead.email}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-gray-400">Phone:</span>
+                      <span className="text-gray-200">{team.lead.phone}</span>
+                    </p>
+                    <p className="flex justify-between">
+                      <span className="text-gray-400">College:</span>
+                      <span className="text-gray-200 truncate ml-2 max-w-[150px]" title={team.lead.college}>{team.lead.college}</span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Marks & Attendance Summary */}
+                <div className="grid grid-cols-2 gap-2 text-xs bg-[#222] p-2 rounded-lg">
+                  <div>
+                    <span className="block text-gray-500 mb-1">Marks</span>
+                    {team.marks && team.marks.length > 0 ? (
+                      <div className="space-y-0.5">
+                        {team.marks.map((m, idx) => (
+                          <div key={idx} className="flex justify-between">
+                            <span className="text-gray-400">{m.name}:</span>
+                            <span className="text-white">{m.total}</span>
+                          </div>
                         ))}
+                      </div>
+                    ) : <span className="text-gray-600">-</span>}
+                  </div>
+                  <div>
+                    <span className="block text-gray-500 mb-1">Attendance</span>
+                    <div className="flex gap-1">
+                      {[1, 2, 3].map(i => {
+                        const status = team?.lead?.attd?.[`attd_${i}`]?.status;
+                        return (
+                          <div
+                            key={i}
+                            className={`w-3 h-3 rounded-full ${status === 'Present' ? 'bg-green-500' : (status ? 'bg-red-500' : 'bg-gray-700')}`}
+                            title={`Day ${i}: ${status || 'N/A'}`}
+                          ></div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
 
-                        <td className="p-3 text-gray-600 text-xs">-</td>
-                        <td className="p-3 text-gray-600 text-xs">-</td>
-                        <td className="p-3 text-gray-600 text-xs">-</td>
+                {/* Members Accordion */}
+                <div className="border-t border-gray-800 pt-3">
+                  <button
+                    onClick={() =>
+                      setExpandedTeamId(
+                        expandedTeamId === team._id ? null : team._id
+                      )
+                    }
+                    className="flex items-center justify-between w-full text-xs font-medium text-gray-400 hover:text-white transition-colors"
+                  >
+                    <span>Members ({team.members.length})</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className={`h-4 w-4 transition-transform ${expandedTeamId === team._id ? "rotate-180" : ""
+                        }`}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
 
-                        {/* Attendance (Member) */}
-                        <td className="p-3">
-                          <span className={`${m.attd?.attd_1?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
-                            {m.attd?.attd_1?.status || "-"}
-                          </span>
-                        </td>
-                        <td className="p-3">
-                          <span className={`${m.attd?.attd_2?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
-                            {m.attd?.attd_2?.status || "-"}
-                          </span>
-                        </td>
-                        <td className="p-3">
-                          <span className={`${m.attd?.attd_3?.status === 'Present' ? 'text-green-400' : 'text-red-400'}`}>
-                            {m.attd?.attd_3?.status || "-"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </>
-                ))}
-              </tbody>
-            </table>
+                  {expandedTeamId === team._id && (
+                    <div className="mt-2 space-y-2 animate-in slide-in-from-top-2">
+                      {team.members.map((m, i) => (
+                        <div
+                          key={i}
+                          className="text-xs bg-[#222] p-2 rounded border border-gray-800"
+                        >
+                          <div className="flex justify-between font-medium text-gray-300">
+                            <span>{m.name}</span>
+                            <span className="text-gray-500">{m.phone}</span>
+                          </div>
+                          <div className="text-gray-500 truncate" title={m.email}>{m.email}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Payment Detail Link */}
+                {team.paymentDetails?.imgUrl && (
+                  <div className="mt-2 pt-2 border-t border-gray-800">
+                    <a href={team.paymentDetails.imgUrl} target="_blank" rel="noreferrer" className="text-xs flex items-center gap-1 text-indigo-400 hover:text-indigo-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      View Payment Proof
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-16 w-16 mb-4 opacity-20"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+          <p className="text-lg font-medium">No teams found yet</p>
+        </div>
+      )}
+
+      {/* Edit Team Modal */}
+      {editingTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-[#111] border border-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-6 text-white">
+              Edit Team Details
+            </h2>
+
+            <div className="space-y-4">
+              {/* Team Name */}
+              <div>
+                <label className="block text-sm text-gray-500 mb-1">
+                  Team Name / Participant Name
+                </label>
+                <input
+                  type="text"
+                  name={editingTeam.teamName ? "teamName" : "name"}
+                  value={editingTeam.teamName || editingTeam.name}
+                  onChange={handleEditInputChange}
+                  className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+              </div>
+
+              {/* Lead Details */}
+              {editingTeam.lead && (
+                <>
+                  <div className="border-t border-gray-800 pt-4 mt-4">
+                    <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">
+                      Lead Information
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm text-gray-500 mb-1">
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={editingTeam.lead.name}
+                          onChange={handleLeadChange}
+                          className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-500 mb-1">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={editingTeam.lead.email}
+                          onChange={handleLeadChange}
+                          className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-500 mb-1">
+                          Phone
+                        </label>
+                        <input
+                          type="text"
+                          name="phone"
+                          value={editingTeam.lead.phone}
+                          onChange={handleLeadChange}
+                          className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm text-gray-500 mb-1">
+                          Roll No.
+                        </label>
+                        <input
+                          type="text"
+                          name="rollNumber"
+                          value={editingTeam.lead.rollNumber}
+                          onChange={handleLeadChange}
+                          className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-sm text-gray-500 mb-1">
+                          College
+                        </label>
+                        <input
+                          type="text"
+                          name="college"
+                          value={editingTeam.lead.college}
+                          onChange={handleLeadChange}
+                          className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 mt-8">
+              <button
+                onClick={() => setEditingTeam(null)}
+                className="px-5 py-2 rounded-lg text-gray-400 hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateTeam}
+                className="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+              >
+                Update Team
+              </button>
+            </div>
           </div>
-        ) : (
-          <p className="text-center text-gray-500 mt-10 text-lg">
-            No teams found.
-          </p>
-        )
-      }
-    </div >
+        </div>
+      )}
+    </div>
   );
 }
 
