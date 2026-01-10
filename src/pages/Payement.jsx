@@ -98,7 +98,14 @@ function Payment() {
         if (!editingTeam) return
 
         try {
-            const res = await api.put(`/admin/team/update/${event}/${editingTeam._id}`, editingTeam)
+            const data = {
+                teamName: editingTeam.name,
+                lead: editingTeam.lead,
+                members: editingTeam.members,
+                payment: editingTeam.payment,
+                verified: editingTeam.verified,
+            }
+            const res = await api.put(`/admin/team/update/${event}/${editingTeam._id}`, data)
             // Update local state
             setTeams(prev => prev.map(t => t._id === editingTeam._id ? editingTeam : t))
             setEditingTeam(null)
