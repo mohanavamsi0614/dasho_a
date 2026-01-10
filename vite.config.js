@@ -16,4 +16,8 @@ export default defineConfig({
       "next/navigation": path.resolve(__dirname, "./src/mocks/next-navigation.js"),
     },
   },
+  server: {
+    host: "0.0.0.0",
+    port: 5174,
+  },
 })
