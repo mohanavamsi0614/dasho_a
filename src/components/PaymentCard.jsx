@@ -3,7 +3,7 @@ import axios from "axios"
 import api from "../lib/api"
 import { useState } from "react"
 
-function PaymentCard({ team, eventId }) {
+function PaymentCard({ team, eventId, onDelete, onEdit }) {
     const [verifying, setVerifying] = useState(false)
     const [verified, setVerified] = useState(team.verified || false)
     const [reminderLoading, setReminderLoading] = useState(false)
@@ -43,16 +43,38 @@ function PaymentCard({ team, eventId }) {
     }
 
     return (
-        <div className="bg-[#111] border border-gray-800 rounded-xl p-6 shadow-lg hover:shadow-red-500/10 transition-all duration-300">
-            <div className="flex justify-between items-start mb-4">
-                <h2 className="text-xl font-bold text-white truncate" title={team.teamName || team.name}>
+        <div className="bg-[#111] border border-gray-800 rounded-xl p-6 shadow-lg hover:shadow-red-500/10 transition-all duration-300 relative group">
+            {/* Action Buttons */}
+            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10">
+                <button
+                    onClick={onEdit}
+                    className="p-2 bg-blue-500/10 text-blue-500 rounded-full hover:bg-blue-500 hover:text-white transition-all duration-200"
+                    title="Edit Team"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                </button>
+                <button
+                    onClick={onDelete}
+                    className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-200"
+                    title="Delete Team"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+
+            <div className="flex justify-between items-start mb-4 pr-10">
+                <h2 className="text-xl font-bold text-white truncate w-full" title={team.teamName || team.name}>
                     {team.teamName || team.name}
                 </h2>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${team.payment
+                <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${team.payment
                     ? (verified ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400")
                     : "bg-red-500/20 text-red-400"
                     }`}>
-                    {team.payment ? (verified ? "Verified" : "Paid (Pending)") : "Not Paid"}
+                    {team.payment ? (verified ? "Verified" : "Pending") : "Not Paid"}
                 </span>
             </div>
 
@@ -151,14 +173,14 @@ function PaymentCard({ team, eventId }) {
                     </div>
 
                     {team.paymentDetails?.imgUrl ? (
-                        <div className="relative group">
+                        <div className="relative group/image">
                             <img
                                 src={team.paymentDetails.imgUrl}
                                 alt="Payment Screenshot"
                                 className="w-full h-48 object-cover rounded-lg border border-gray-700 cursor-pointer hover:opacity-90 transition"
                                 onClick={() => window.open(team.paymentDetails.imgUrl, '_blank')}
                             />
-                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition bg-black/50 rounded-lg pointer-events-none">
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition bg-black/50 rounded-lg pointer-events-none">
                                 <span className="text-white text-sm font-medium">Click to view</span>
                             </div>
                         </div>
