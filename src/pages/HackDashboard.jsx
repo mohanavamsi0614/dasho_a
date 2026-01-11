@@ -58,6 +58,11 @@ function HackDashboard() {
       alert("Maximum number of members reached")
     }
   }
+  const handleMemberChange = (index, e) => {
+    const { name, value } = e.target;
+    setEditingTeam({ ...editingTeam, members: editingTeam.members.map((member, i) => i === index ? { ...member, [name]: value } : member) })
+
+  }
 
   const handleRemoveMember = (index) => {
     setEditingTeam({ ...editingTeam, members: editingTeam.members.filter((_, i) => i !== index) })
@@ -616,11 +621,13 @@ function HackDashboard() {
                 </>
               )}
               <h1>Members</h1>
-              <button onClick={handleAddMember}>Add +</button>
+              <button onClick={handleAddMember} className=" p-1 bg-green-600 rounded-lg ">Add +</button>
               {editingTeam.members.map((member, index) => (
                 <div key={index}>
-                  <h1>Member {index + 1}</h1>
-                  <button onClick={() => handleRemoveMember(index)}>Remove</button>
+                  <div className=" flex justify-between border-b border-gray-800 my-2 p-2">
+                    <h1>Member {index + 1}</h1>
+                    <button onClick={() => handleRemoveMember(index)} className=" p-1 bg-red-600 rounded-lg ">Remove</button>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm text-gray-500 mb-1">
