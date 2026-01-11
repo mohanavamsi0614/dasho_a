@@ -51,7 +51,7 @@ function HackDashboard() {
     });
   };
   const handleAddMember = () => {
-    if (eventData.event.max_members > editingTeam.members.length + 1) {
+    if (eventData.event.maxTeamMembers > editingTeam.members.length + 1) {
       setEditingTeam({ ...editingTeam, members: [...editingTeam.members, { name: "", rollNumber: "", college: "" }] })
     }
     else {
@@ -61,7 +61,6 @@ function HackDashboard() {
   const handleMemberChange = (index, e) => {
     const { name, value } = e.target;
     setEditingTeam({ ...editingTeam, members: editingTeam.members.map((member, i) => i === index ? { ...member, [name]: value } : member) })
-
   }
 
   const handleRemoveMember = (index) => {
