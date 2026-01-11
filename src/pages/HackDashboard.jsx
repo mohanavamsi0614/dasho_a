@@ -50,6 +50,18 @@ function HackDashboard() {
       return { ...prev, event: { ...prev.event, status: "closed" } };
     });
   };
+  const handleAddMember = () => {
+    if (eventData.event.max_members > editingTeam.members.length + 1) {
+      setEditingTeam({ ...editingTeam, members: [...editingTeam.members, { name: "", rollNumber: "", college: "" }] })
+    }
+    else {
+      alert("Maximum number of members reached")
+    }
+  }
+
+  const handleRemoveMember = (index) => {
+    setEditingTeam({ ...editingTeam, members: editingTeam.members.filter((_, i) => i !== index) })
+  }
 
   socket.on("eventOpen", onOpen);
   socket.on("eventClosed", onClosed);
@@ -73,39 +85,28 @@ function HackDashboard() {
       "Phone",
       "Roll Number",
       "College",
+      "branch",
+      "stream",
+      "year"
+
     ];
 
-    // Add custom field headers
     if (eventData.event?.other) {
       eventData.event.other.forEach((f) => headers.push(f.title));
     }
-
-    // Add remaining headers
-    headers.push(
-      "Payment Status",
-      "UPI",
-      "Verified",
-      "Marks",
-      "Attd-1",
-      "Attd-2",
-      "Attd-3"
-    );
-
+    headers.push("Payment Status", "UPI", "Verified",);
     let csvRows = [headers];
 
     teams.forEach((team) => {
-      // Helper to extract custom values
       const getCustomValues = (person) => {
         if (!eventData.event?.other) return [];
         return eventData.event.other.map((f) => person[f.title] || "-");
       };
 
-      // Helper to format marks
       const marksStr = team.marks
         ? team.marks.map((m) => `${m.name}: ${m.total}`).join(" | ")
         : "-";
 
-      // Lead Row
       csvRows.push([
         team.teamName,
         "Lead",
@@ -114,17 +115,16 @@ function HackDashboard() {
         team.lead.phone || "",
         team.lead.rollNumber || "",
         team.lead.college || "",
+        team.lead.branch,
+        team.lead.stream,
+        team.lead.year,
         ...getCustomValues(team.lead),
         team.payment ? "Paid" : "Pending",
         team.paymentDetails?.upi || "-",
         team.verified ? "Yes" : "No",
-        marksStr,
-        team.lead.attd?.attd_1?.status || "Absent",
-        team.lead.attd?.attd_2?.status || "Absent",
-        team.lead.attd?.attd_3?.status || "Absent",
+
       ]);
 
-      // Member Rows
       team.members.forEach((m) => {
         csvRows.push([
           team.teamName,
@@ -134,14 +134,13 @@ function HackDashboard() {
           m.phone || "",
           m.rollNumber || "",
           m.college || "",
+          m.branch,
+          m.stream,
+          m.year,
           ...getCustomValues(m),
-          "-", // Payment Status (Team level)
-          "-", // UPI
-          "-", // Verified
-          "-", // Marks
-          m.attd?.attd_1?.status || "Absent",
-          m.attd?.attd_2?.status || "Absent",
-          m.attd?.attd_3?.status || "Absent",
+          team.payment ? "Paid" : "Pending",
+          team.paymentDetails?.upi || "-",
+          team.verified ? "Yes" : "No",
         ]);
       });
     });
@@ -524,7 +523,6 @@ function HackDashboard() {
         </div>
       )}
 
-      {/* Edit Team Modal */}
       {editingTeam && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
           <div className="bg-[#111] border border-gray-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
@@ -533,7 +531,6 @@ function HackDashboard() {
             </h2>
 
             <div className="space-y-4">
-              {/* Team Name */}
               <div>
                 <label className="block text-sm text-gray-500 mb-1">
                   Team Name / Participant Name
@@ -547,7 +544,6 @@ function HackDashboard() {
                 />
               </div>
 
-              {/* Lead Details */}
               {editingTeam.lead && (
                 <>
                   <div className="border-t border-gray-800 pt-4 mt-4">
@@ -619,6 +615,58 @@ function HackDashboard() {
                   </div>
                 </>
               )}
+              <h1>Members</h1>
+              <button onClick={handleAddMember}>Add +</button>
+              {editingTeam.members.map((member, index) => (
+                <div key={index}>
+                  <h1>Member {index + 1}</h1>
+                  <button onClick={() => handleRemoveMember(index)}>Remove</button>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-500 mb-1">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={member.name}
+                        onChange={(e) =>
+                          handleMemberChange(index, e)
+                        }
+                        className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-500 mb-1">
+                        Roll No.
+                      </label>
+                      <input
+                        type="text"
+                        name="rollNumber"
+                        value={member.rollNumber}
+                        onChange={(e) =>
+                          handleMemberChange(index, e)
+                        }
+                        className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm text-gray-500 mb-1">
+                        College
+                      </label>
+                      <input
+                        type="text"
+                        name="college"
+                        value={member.college}
+                        onChange={(e) =>
+                          handleMemberChange(index, e)
+                        }
+                        className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className="flex justify-end gap-3 mt-8">
@@ -637,8 +685,9 @@ function HackDashboard() {
             </div>
           </div>
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 }
 
