@@ -1,10 +1,9 @@
 import './App.css'
-import { Navigate, Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
-
-// Pages
+import EventLayout from "./layout/Layout"
 import Home from './pages/Home'
 import Auth from './pages/Auth'
 import Profile from './pages/Profile'
@@ -17,18 +16,16 @@ import Attd from './pages/Attd'
 import HackAttd from './pages/HackAttd'
 import Payement from './pages/Payement'
 import Marks from './pages/Marks'
+import Update from './pages/Update'
 import socket from './lib/socket'
 import { useEffect } from 'react'
-import Update from './pages/Update'
 
 function AppContent() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
     socket.connect();
-    return () => {
-      socket.disconnect();
-    };
+    return () => socket.disconnect();
   }, []);
 
   if (loading) {
@@ -43,23 +40,81 @@ function AppContent() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-        <Route path="/auth" element={user ? <Navigate to="/" replace /> : <Auth />} />
-        <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path='/qr' element={<ProtectedRoute><QRForm /></ProtectedRoute>} />
-        <Route path='/hackthon' element={<ProtectedRoute><HackathonForm /></ProtectedRoute>} />
-        <Route path='/qr/scanner/:event' element={<QRScanner />} />
-        <Route path='/dashboard/qr/:event' element={<QRDashboard />} />
-        <Route path='/dashboard/hack/:event' element={<><HackDashboard /></>} />
-        <Route path='/attd/:event' element={<ProtectedRoute><Attd /></ProtectedRoute>} />
-        <Route path='/attd/hack/:event' element={<ProtectedRoute><HackAttd /></ProtectedRoute>} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/auth"
+          element={user ? <Navigate to="/" replace /> : <Auth />}
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/qr"
+          element={
+            <ProtectedRoute>
+              <QRForm />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hackthon"
+          element={
+            <ProtectedRoute>
+              <HackathonForm />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/hack/:event" element={<EventLayout />}>
+          <Route index element={<HackDashboard />} />
+          <Route
+            path="attd"
+            element={
+              <ProtectedRoute>
+                <HackAttd />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="payment" element={<Payement />} />
+          <Route path="update" element={<Update />} />
+          <Route path="marks" element={<Marks />} />
+        </Route>
+
+        {/* QR EVENT ROUTES */}
+        <Route path="/qr/:event">
+          <Route index element={<QRDashboard />} />
+          <Route path="scanner" element={<QRScanner />} />
+          <Route
+            path="attd"
+            element={
+              <ProtectedRoute>
+                <Attd />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+
+        {/* FALLBACK */}
         <Route path="*" element={<Navigate to="/" replace />} />
-        <Route path='/payment/:event' element={<Payement />} />
-        <Route path='/update/:eventId' element={<Update />} />
-        <Route path='/marks/:event' element={<Marks />} />
       </Routes>
     </Layout>
-  )
+  );
 }
 
 function App() {
@@ -67,7 +122,7 @@ function App() {
     <AuthProvider>
       <AppContent />
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

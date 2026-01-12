@@ -159,7 +159,7 @@ function Payment() {
 
     return (
         <div className="min-h-screen bg-black text-[#ECE8E7] p-8">
-            <div className="max-w-7xl mx-auto">
+            <div className="w-full max-w-full mx-auto">
                 <h1 className="text-3xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500">
                     Payment Verification
                 </h1>

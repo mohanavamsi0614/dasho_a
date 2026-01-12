@@ -10,7 +10,7 @@ export default function NavBar() {
 
   return (
     <nav className="bg-[#0b1220] border-b border-[#22303b]">
-      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
+      <div className="w-full px-6 flex items-center justify-between h-16">
         <div className="flex items-center gap-4">
           <Link to="/" className="text-xl font-bold">DashO</Link>
           <Link to="/qr" className="text-sm text-[#919294] hover:text-white">Create QR</Link>

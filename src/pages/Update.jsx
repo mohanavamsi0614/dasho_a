@@ -12,7 +12,7 @@ function Update() {
 
     return (
         <div className="min-h-screen  flex justify-center py-10 px-4">
-            <div className="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6">
+            <div className="w-full max-w-full mx-4 bg-white shadow-lg rounded-2xl p-6">
 
                 <h2 className="text-2xl font-semibold mb-4 text-gray-800">
                     Send Update

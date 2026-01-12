@@ -145,7 +145,7 @@ function Marks() {
                 <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px]" />
             </div>
 
-            <div className="max-w-7xl mx-auto space-y-6">
+            <div className="w-full max-w-full mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-6 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
                     <div>
