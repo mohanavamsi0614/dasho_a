@@ -45,24 +45,18 @@ function Marks() {
             });
     }, [eventId]);
 
-    // Sync marks when Team or Round changes
     useEffect(() => {
         if (selectedTeam && selectedRound) {
-            // Find existing marks for this round if they exist in the team object
-            // NOTE: The backend structure for marks might vary. 
-            // Based on previous code: team.marks[round.name] -> { "Category": score }
-            const existingMarks = selectedTeam.marks?.[selectedRound.name] || {};
+            const existingMarks = selectedTeam.marks?.filter(m => m.name === selectedRound.name)[0]?.marks || {};
             setCurrentMarks(existingMarks);
         }
     }, [selectedTeam, selectedRound]);
 
-    // Handlers
     const handleScoreChange = (category, value) => {
-        // Ensure value doesn't exceed max
         const max = Number(selectedRound.catogary.find(c => c.title === category)?.marks || 100);
         let numValue = Number(value);
         if (numValue < 0) numValue = 0;
-        // if (numValue > max) numValue = max; // Optional: Enforce max cap strictly or just warn
+        if (numValue > max) numValue = max;
 
         setCurrentMarks((prev) => ({
             ...prev,
@@ -74,29 +68,29 @@ function Marks() {
         if (!selectedTeam || !selectedRound) return;
 
         const payload = {
-            marks: { ...currentMarks, name: selectedRound.name, total: calculateTotal(currentMarks) }
+            marks: { name: selectedRound.name, marks: { ...currentMarks }, total: calculateTotal(currentMarks) }
         };
-
+        console.log(payload);
+        setLoading(true)
         api.post("/admin/marks/" + eventId + "/" + selectedTeam._id, payload)
             .then((res) => {
                 alert("Marks saved successfully!");
-
-                // OPTIMISTIC UPDATE: Update local teams state so we don't need to refetch
                 setTeams((prevTeams) =>
                     prevTeams.map(t => {
                         if (t._id === selectedTeam._id) {
                             return {
                                 ...t,
-                                marks: {
-                                    ...t.marks,
-                                    [selectedRound.name]: currentMarks
-                                }
+                                marks: [
+                                    ...t.marks?.filter(m => m.name !== selectedRound.name),
+                                    { name: selectedRound.name, marks: { ...currentMarks }, total: calculateTotal(currentMarks) }
+                                ]
                             }
                         }
                         return t;
                     })
                 );
             })
+        setLoading(false)
             .catch(err => {
                 console.error(err);
                 alert("Failed to save marks.");
@@ -119,8 +113,6 @@ function Marks() {
 
     const calculateTotal = (marksObj) => {
         if (!marksObj) return 0;
-        // marksObj is something like { "Design": 10, "Code": 20, "name": "Round 1" }
-        // We need to sum only numeric values, ignoring "name"
         return Object.entries(marksObj).reduce((acc, [key, val]) => {
             if (key === "name") return acc;
             return acc + (Number(val) || 0);
@@ -224,8 +216,7 @@ function Marks() {
                                     <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                                         {getFilteredTeams().map(team => {
                                             const isSelected = selectedTeam?._id === team._id;
-                                            const hasMarks = team.marks?.[selectedRound?.name]; // Check if marked for this round
-
+                                            const hasMarks = team.marks?.filter(m => m.name === selectedRound.name)[0]?.marks?.total;
                                             return (
                                                 <div
                                                     key={team._id}
@@ -237,7 +228,7 @@ function Marks() {
                                                 >
                                                     <div>
                                                         <p className={`text-sm font-semibold ${isSelected ? "text-indigo-300" : "text-gray-300"}`}>{team.teamName}</p>
-
+                                                        <p className={`text-xs text-gray-400 ${isSelected ? "text-indigo-300" : "text-gray-300"}`}>{team.marks?.filter(m => m.name === selectedRound.name)[0]?.marks?.total}</p>
                                                     </div>
                                                     {hasMarks && (
                                                         <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
@@ -267,7 +258,7 @@ function Marks() {
                                                 <div className="text-right">
                                                     <div className="text-sm text-gray-400 mb-1">Current Score</div>
                                                     <div className="text-4xl font-mono font-bold text-indigo-400">
-                                                        {calculateTotal(currentMarks)}
+                                                        {selectedTeam.marks?.filter(m => m.name === selectedRound.name)[0]?.marks?.total || 0}
                                                         <span className="text-lg text-gray-600"> / {selectedRound.total}</span>
                                                     </div>
                                                 </div>
@@ -327,7 +318,6 @@ function Marks() {
                             </>
                         )}
 
-                        {/* --- RESULTS TAB --- */}
                         {activeTab === 'results' && (
                             <div className="lg:col-span-12 bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
                                 <div className="overflow-x-auto">
@@ -343,11 +333,10 @@ function Marks() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-white/5">
-                                            {/* Sort teams by total score descending */}
                                             {[...teams]
                                                 .map(t => ({
                                                     ...t,
-                                                    totalScore: calculateTotal(t.marks?.[selectedRound.name])
+                                                    totalScore: t.marks?.filter(m => m.name === selectedRound.name)[0]?.total
                                                 }))
                                                 .sort((a, b) => b.totalScore - a.totalScore)
                                                 .map((team, idx) => (
@@ -356,7 +345,7 @@ function Marks() {
                                                         <td className="p-5 font-bold text-white">{team.teamName}</td>
                                                         {selectedRound.catogary.map((cat, i) => (
                                                             <td key={i} className="p-5 text-gray-400">
-                                                                {team.marks?.[selectedRound.name]?.[cat.title] || "-"}
+                                                                {team.marks?.filter(m => m.name === selectedRound.name)[0]?.marks?.[cat.title] || "-"}
                                                             </td>
                                                         ))}
                                                         <td className="p-5 font-bold text-indigo-400 text-lg">
