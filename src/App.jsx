@@ -97,7 +97,7 @@ function AppContent() {
         </Route>
 
         {/* QR EVENT ROUTES */}
-        <Route path="/qr/:event">
+        <Route path="/qr/:event" element={<EventLayout />}>
           <Route index element={<QRDashboard />} />
           <Route path="scanner" element={<QRScanner />} />
           <Route
@@ -108,6 +108,7 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+          <Route path="payment" element={<Payement />} />
         </Route>
 
         {/* FALLBACK */}

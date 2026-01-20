@@ -58,7 +58,7 @@ function QrDashboard() {
             </button>
 
             <button
-              onClick={() => nav("/payment/" + event)}
+              onClick={() => nav("payment")}
               className="px-5 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 font-medium transition-all duration-200 text-white"
             >
               Payments

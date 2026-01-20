@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Profile() {
   const nav = useNavigate();
@@ -161,7 +161,11 @@ function Profile() {
                   <div className="flex gap-3">
                     {event.type === "qr" ? (
                       <>
-                        <button
+                        <button>
+                          <button onClick={() => nav(`/qr/${event._id.$oid || event._id}`)}>Go to Dashboard</button>
+
+                        </button>
+                        {/* <button
                           onClick={() => nav(`/qr/scanner/${event._id.$oid || event._id}`)}
                           className="px-3 py-2 bg-red-500 hover:bg-red-600 rounded-md text-white text-sm"
                         >
@@ -172,7 +176,7 @@ function Profile() {
                           className="px-3 py-2 bg-gray-800 hover:bg-gray-900 rounded-md text-gray-200 text-sm"
                         >
                           Dashboard
-                        </button>
+                        </button> */}
                       </>
                     ) : (
                       <div className=" flex flex-wrap gap-3">

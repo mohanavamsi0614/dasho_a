@@ -134,7 +134,7 @@ const QRScanner = () => {
             <InfoRow label="Name" value={qrResult.name} />
             <InfoRow label="Reg No." value={qrResult.rollNumber} />
             <InfoRow label="Year" value={qrResult.year} />
-            <infoRow label="Department" value={qrResult.branch} />
+            <InfoRow label="Department" value={qrResult.branch} />
 
             <div className="flex gap-3 mt-5">
               <button
