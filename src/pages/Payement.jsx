@@ -14,7 +14,7 @@ function Payment() {
     useEffect(() => {
         const cloudnary = window.cloudinary.createUploadWidget(
             {
-                cloudName: "dazw9qf8y",
+                cloudName: "dfseckyjx",
                 uploadPreset: "qbvu3y5j",
             },
             (error, result) => {
@@ -394,7 +394,7 @@ function Payment() {
                                 >
                                     Upload Image
                                 </button>
-                                <img src={newPayment.imgUrl} alt="" />
+                                <img src={newPayment.imgUrl} alt="" className="w-20 h-20" />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
