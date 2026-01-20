@@ -1,6 +1,6 @@
 import PaymentCard from "@/components/PaymentCard"
 import api from "../lib/api"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router"
 
 function Payment() {
@@ -9,8 +9,25 @@ function Payment() {
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState("pending")
     const [payments, setpayments] = useState([])
+    const wid = useRef(null)
 
     useEffect(() => {
+        const cloudnary = new window.cloudinary.createUploadWidget(
+            {
+                cloudName: "dazw9qf8y",
+                uploadPreset: "ml_default",
+            },
+            (error, result) => {
+                if (!error && result && result.event === "success") {
+                    console.log("Done!", result.info);
+                    setNewPayment(prev => ({
+                        ...prev,
+                        imgUrl: result.info.secure_url
+                    }))
+                }
+            }
+        )
+        wid.current = cloudnary
         api.get("/admin/event/" + event).then((res) => {
             console.log(res.data)
             setTeams(res.data.event_og || [])
@@ -371,14 +388,13 @@ function Payment() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm text-gray-500 mb-1">Image URL (QR Code / Banner)</label>
-                                <input
-                                    type="text"
-                                    name="imgUrl"
-                                    value={newPayment.imgUrl}
-                                    onChange={handleInputChange}
-                                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-orange-500 transition-colors"
-                                    placeholder="https://..."
-                                />
+                                <button
+                                    onClick={() => wid.current.open()}
+                                    className="px-5 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                                >
+                                    Upload Image
+                                </button>
+                                <img src={newPayment.imgUrl} alt="" />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
