@@ -12,7 +12,7 @@ function Payment() {
     const wid = useRef(null)
 
     useEffect(() => {
-        const cloudnary = new window.cloudinary.createUploadWidget(
+        const cloudnary = window.cloudinary.createUploadWidget(
             {
                 cloudName: "dazw9qf8y",
                 uploadPreset: "ml_default",
