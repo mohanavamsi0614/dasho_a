@@ -15,7 +15,7 @@ function Payment() {
         const cloudnary = window.cloudinary.createUploadWidget(
             {
                 cloudName: "dazw9qf8y",
-                uploadPreset: "ml_default",
+                uploadPreset: "qbvu3y5j",
             },
             (error, result) => {
                 if (!error && result && result.event === "success") {
