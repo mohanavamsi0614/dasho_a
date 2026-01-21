@@ -240,7 +240,7 @@ function HackAttd() {
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-            {getFilteredTeams().map(team => {
+            {getFilteredTeams().map((team, i) => {
               const isSelected = activeTeamData?._id === team._id;
               const statusColor = getTeamStatusColor(team);
 
@@ -254,7 +254,8 @@ function HackAttd() {
                     }`}
                 >
                   <div className="overflow-hidden z-10">
-                    <p className={`text-sm font-bold truncate ${isSelected ? "text-white" : "text-gray-300 group-hover:text-white"}`}>{team.teamName}</p>
+                    <p className={`text-sm font-bold truncate ${isSelected ? "text-white" : "text-gray-300 group-hover:text-white"}`}>                    {i + 1}
+                      . {team.teamName}</p>
                     <p className={`text-[11px] truncate ${isSelected ? "text-indigo-200" : "text-gray-500"}`}>{team.lead.name}</p>
                   </div>
                   <div className={`h-2.5 w-2.5 min-w-[10px] rounded-full ${statusColor} ml-3 ring-2 ring-black/20`}></div>
