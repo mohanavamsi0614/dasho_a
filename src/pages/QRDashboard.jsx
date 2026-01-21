@@ -23,10 +23,12 @@ function QrDashboard() {
   }, [event]);
 
   const openEvent = async () => {
+    console.log("openEvent")
     socket.emit("openEvent", event)
   }
 
   const closeEvent = async () => {
+    console.log("closeEvent")
     socket.emit("closeEvent", event)
   }
 
@@ -48,13 +50,13 @@ function QrDashboard() {
           </h1>
           <div className="flex items-center gap-3">
             <button
-              onClick={eventData.event?.status ? closeEvent : openEvent}
-              className={`px-5 py-2 rounded-lg font-medium transition-all duration-200 ${eventData.event?.status
+              onClick={eventData.event?.status === "open" ? closeEvent : openEvent}
+              className={`px-5 py-2 rounded-lg font-medium transition-all duration-200 ${eventData.event?.status === "open"
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-green-600 hover:bg-green-700"
                 }`}
             >
-              {eventData.event?.status ? "Close Event" : "Open Event"}
+              {eventData.event?.status === "open" ? "Close Event" : "Open Event"}
             </button>
 
             <button
