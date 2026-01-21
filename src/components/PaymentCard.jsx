@@ -99,6 +99,21 @@ function PaymentCard({ team, eventId, onDelete, onEdit }) {
                 {showDetails && (
                     <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
                         {/* Lead Details */}
+                        {team.rollNumber && (
+                            <div className="bg-[#1a1a1a]/50 p-3 rounded-lg border border-gray-800/50">
+                                <h3 className="text-xs uppercase tracking-wider text-[#E16254] font-bold mb-2">Team Lead</h3>
+                                <div className="grid grid-cols-1 gap-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-500">Roll Number:</span>
+                                        <span className="text-gray-200 font-medium">{team.rollNumber}</span>
+                                        <span>Stream</span>
+                                        <span>{team.stream}</span>
+                                        <span>Branch</span>
+                                        <span>{team.branch}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         {team.lead && (
                             <div className="bg-[#1a1a1a]/50 p-3 rounded-lg border border-gray-800/50">
                                 <h3 className="text-xs uppercase tracking-wider text-[#E16254] font-bold mb-2">Team Lead</h3>
