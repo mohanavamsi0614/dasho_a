@@ -80,7 +80,8 @@ function HackDashboard() {
   const downloadCSV = () => {
     if (!eventData || !teams) return;
 
-    // Base headers
+    const safe = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+
     let headers = [
       "Team Name",
       "Role",
@@ -89,36 +90,51 @@ function HackDashboard() {
       "Phone",
       "Roll Number",
       "College",
-      "branch",
-      "stream",
-      "year"
-
+      "Branch",
+      "Stream",
+      "Year"
     ];
 
     if (eventData.event?.other) {
       eventData.event.other.forEach((f) => headers.push(f.title));
     }
-    headers.push("Payment Status", "UPI", "Verified",);
+
+    headers.push("Payment", "UPI", "Verified");
+
+    // Round headers
+    for (let round of eventData.event.rounds) {
+      for (let cat of round.catogary) {
+        headers.push(`${round.name}-${cat.title}`);
+      }
+    }
+
     let csvRows = [headers];
 
+    const getCustomValues = (person) => {
+      if (!eventData.event?.other) return [];
+      return eventData.event.other.map((f) => person[f.title] || "-");
+    };
+
+    const getMarks = (team) => {
+      let res = [];
+      for (let round of eventData.event.rounds) {
+        const teamRound = team.marks?.find((m) => m.name === round.name);
+        for (let cat of round.catogary) {
+          res.push(teamRound?.marks?.[cat.title] ?? "-");
+        }
+      }
+      return res;
+    };
+
     teams.forEach((team) => {
-      const getCustomValues = (person) => {
-        if (!eventData.event?.other) return [];
-        return eventData.event.other.map((f) => person[f.title] || "-");
-      };
-
-      const marksStr = team.marks
-        ? team.marks.map((m) => `${m.name}: ${m.total}`).join(" | ")
-        : "-";
-
       csvRows.push([
         team.teamName,
         "Lead",
         team.lead.name,
-        team.lead.email || "",
-        team.lead.phone || "",
-        team.lead.rollNumber || "",
-        team.lead.college || "",
+        team.lead.email,
+        team.lead.phone,
+        team.lead.rollNumber,
+        team.lead.college,
         team.lead.branch,
         team.lead.stream,
         team.lead.year,
@@ -126,7 +142,7 @@ function HackDashboard() {
         team.payment ? "Paid" : "Pending",
         team.paymentDetails?.upi || "-",
         team.verified ? "Yes" : "No",
-
+        ...getMarks(team)
       ]);
 
       team.members.forEach((m) => {
@@ -134,10 +150,10 @@ function HackDashboard() {
           team.teamName,
           "Member",
           m.name,
-          m.email || "",
-          m.phone || "",
-          m.rollNumber || "",
-          m.college || "",
+          m.email,
+          m.phone,
+          m.rollNumber,
+          m.college,
           m.branch,
           m.stream,
           m.year,
@@ -145,13 +161,22 @@ function HackDashboard() {
           team.payment ? "Paid" : "Pending",
           team.paymentDetails?.upi || "-",
           team.verified ? "Yes" : "No",
+          ...getMarks(team)
         ]);
       });
     });
-    const csvString = csvRows.map((r) => r.join(",")).join("\n");
-    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+
+    const csvString = csvRows
+      .map((r) => r.map(safe).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvString], {
+      type: "text/csv;charset=utf-8;"
+    });
+
     saveAs(blob, `Hackathon-${event}.csv`);
   };
+
 
   const handleDeleteTeam = async (teamId) => {
     if (
