@@ -112,6 +112,10 @@ function PaymentCard({ team, eventId, onDelete, onEdit }) {
                                         <span>{team.stream}</span>
                                     </div>
                                     <div className="flex justify-between">
+                                        <span>Phone Number</span>
+                                        <span>{team.phonenumber}</span>
+                                    </div>
+                                    <div className="flex justify-between">
                                         <span>Branch</span>
                                         <span>{team.branch}</span>
                                     </div>

@@ -80,7 +80,7 @@ function QrDashboard() {
                   Object.keys(it || {}).forEach(k => headersSet.add(k));
                 });
                 // prefer ordering for common fields
-                const preferred = ['name', 'collage', 'year', 'branch', 'rollnumber', 'email', 'phone', 'checkin', 'checkout'];
+                const preferred = ['name', 'collage', 'year', 'branch', 'rollNumber', 'email', , 'checkin', 'checkout'];
                 const headers = [];
                 preferred.forEach(h => { if (headersSet.has(h)) { headers.push(h); headersSet.delete(h); } });
                 // remaining headers
@@ -162,7 +162,7 @@ function QrDashboard() {
                     {item.year} • {item.branch}
                   </p>
                   <p className="text-gray-300 text-sm font-medium mb-3">
-                    Roll: {item.rollnumber}
+                    Roll: {item.rollNumber}
                   </p>
 
                   {/* Check-in list */}
