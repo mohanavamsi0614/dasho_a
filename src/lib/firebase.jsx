@@ -82,6 +82,7 @@ function Google() {
       .post("/admin/register", data)
       .then((res) => {
         localStorage.setItem("user", JSON.stringify(res.data.org));
+        window.location.reload();
         nav("/profile");
       })
       .catch(() => alert("Registration failed"));

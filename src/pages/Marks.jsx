@@ -4,21 +4,18 @@ import api from "../lib/api";
 
 function Marks() {
     const eventId = useParams().event;
-    // Core Data
-    const [eventData, setEventData] = useState(null); // stores { event: ..., event_og: ... }
+    const [eventData, setEventData] = useState(null);
     const [teams, setTeams] = useState([]);
     const [rounds, setRounds] = useState([]);
 
-    // UI State
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("grading"); // "grading" | "results"
+    const [activeTab, setActiveTab] = useState("grading");
     const [selectedRound, setSelectedRound] = useState(null);
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [currentMarks, setCurrentMarks] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
     const [showCreateRound, setShowCreateRound] = useState(false);
 
-    // Fetch Data on Load
     useEffect(() => {
         setLoading(true);
         api.get("/admin/event/" + eventId)
@@ -32,7 +29,6 @@ function Marks() {
                     setSelectedRound(fetchedRounds[0]);
                 }
 
-                // Select first team by default if available
                 if (res.data.event_og && res.data.event_og.length > 0) {
                     setSelectedTeam(res.data.event_og[0]);
                 }
@@ -54,7 +50,18 @@ function Marks() {
 
     const handleScoreChange = (category, value) => {
         const max = Number(selectedRound.catogary.find(c => c.title === category)?.marks || 100);
+
+        if (value === "") {
+            setCurrentMarks((prev) => ({
+                ...prev,
+                [category]: ""
+            }));
+            return;
+        }
+
         let numValue = Number(value);
+        if (isNaN(numValue)) return;
+
         if (numValue < 0) numValue = 0;
         if (numValue > max) numValue = max;
 
@@ -276,7 +283,7 @@ function Marks() {
                                                                 type="number"
                                                                 min="0"
                                                                 max={cat.marks}
-                                                                value={currentMarks[cat.title] || ""}
+                                                                value={currentMarks[cat.title] ?? ""}
                                                                 onChange={(e) => handleScoreChange(cat.title, e.target.value)}
                                                                 className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-lg text-white focus:outline-none focus:border-indigo-500 transition-colors placeholder-gray-700"
                                                                 placeholder="0"

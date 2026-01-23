@@ -26,6 +26,10 @@ function HackAttd() {
   }, [event]);
 
   useEffect(() => {
+    getStats()
+  }, [teams]);
+
+  useEffect(() => {
     socket.on("currAttd", (id) => {
       console.log("Current session updated:", id);
       setActiveAttd(id);
@@ -46,13 +50,11 @@ function HackAttd() {
       if (sessions.length > 0) {
         setCurrAttd(sessions[sessions.length - 1]);
       }
-      getStats()
 
-      // Auto-select first team
+
       if (res.data.event_og && res.data.event_og.length > 0) {
         setSelectedTeam(res.data.event_og[0]);
       }
-
       setLoading(false);
     })
   };
