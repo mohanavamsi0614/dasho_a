@@ -11,7 +11,11 @@ function HackAttd() {
   const [loading, setLoading] = useState(true);
   const [currAttd, setCurrAttd] = useState("");
   const [activeAttd, setActiveAttd] = useState();
-
+  const [stats, setstats] = useState({
+    present: 0,
+    absent: 0,
+    pending: 0
+  })
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewImage, setViewImage] = useState(null);
@@ -40,8 +44,9 @@ function HackAttd() {
 
       const sessions = res.data.event.attd || [];
       if (sessions.length > 0) {
-        setCurrAttd(sessions[sessions.length - 1]); // Default to latest session
+        setCurrAttd(sessions[sessions.length - 1]);
       }
+      getStats()
 
       // Auto-select first team
       if (res.data.event_og && res.data.event_og.length > 0) {
@@ -49,9 +54,27 @@ function HackAttd() {
       }
 
       setLoading(false);
-    });
+    })
   };
-
+  const getStats = () => {
+    let present = 0;
+    let absent = 0;
+    let pending = 0;
+    console.log(currAttd)
+    teams.forEach(t => {
+      t.lead.attd?.[currAttd]?.status === "Present" ? present++ : absent++;
+      console.log(t.lead.attd?.[currAttd]?.status)
+      t.members.forEach(m => {
+        m.attd?.[currAttd]?.status === "Present" ? present++ : absent++;
+      });
+      pending += t.members.length;
+    });
+    setstats({
+      present,
+      absent,
+      pending
+    });
+  }
   const handleCreateAttd = () => {
     api
       .post("/admin/hack/attd/create/" + event)
@@ -74,7 +97,7 @@ function HackAttd() {
       socket.emit("changeAttd", "", event);
     }
   };
-
+  // getStats()
   const updateAttendance = async (teamId, memberId, status) => {
     setTeams(prevTeams => prevTeams.map(t => {
       if (t._id !== teamId) return t;
@@ -168,7 +191,6 @@ function HackAttd() {
   return (
     <div className="min-h-screen font-poppins bg-[#050505] text-white p-4 sm:p-6 overflow-hidden selection:bg-indigo-500/30">
 
-      {/* Subtle nice background */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[10%] w-[500px] h-[500px] bg-emerald-600/10 rounded-full blur-[100px]" />
@@ -222,6 +244,18 @@ function HackAttd() {
               {currAttd === activeAttd ? "Stop Session" : "Start Session"}
             </button>
           )}
+        </div>
+      </div>
+
+      <div>
+        Stats
+        <div>
+          present
+          {stats.present}
+        </div>
+        <div>
+          absent
+          {stats.absent}
         </div>
       </div>
 
@@ -419,7 +453,7 @@ function AttendanceActions({ member, currAttd, onUpdate, setViewImage, allSessio
               className="h-8 w-8 rounded-full overflow-hidden border-2 border-[#1a1a1a] cursor-pointer hover:scale-110 hover:z-10 transition-all relative z-0"
               title={`Ref: ${session}`}
             >
-              <img src={member.attd[session].img} alt="Ref" className="h-full w-full object-cover" />
+              <img src={member.attd[session].img} alt="Ref" className="size-14 rounded-full object-cover" />
             </div>
           ))}
         </div>
