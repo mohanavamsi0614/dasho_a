@@ -2,7 +2,7 @@ import socket from "@/lib/socket";
 import api from "../lib/api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { Check, X, Plus, Image as ImageIcon, Search, ChevronRight, User, Shield, CameraOff } from "lucide-react";
+import { Check, X, Plus, Image as ImageIcon, Search, ChevronRight, User, Shield, CameraOff, Clock, Users } from "lucide-react";
 
 function HackAttd() {
   const { event } = useParams();
@@ -247,15 +247,36 @@ function HackAttd() {
         </div>
       </div>
 
-      <div>
-        Stats
-        <div>
-          present
-          {stats.present}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-3xl flex items-center justify-between group hover:bg-emerald-500/20 transition-all">
+          <div>
+            <p className="text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">Present</p>
+            <p className="text-3xl font-black text-white">{stats.present}</p>
+          </div>
+          <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Check size={24} strokeWidth={3} />
+          </div>
         </div>
-        <div>
-          absent
-          {stats.absent}
+
+        <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-3xl flex items-center justify-between group hover:bg-rose-500/20 transition-all">
+          <div>
+            <p className="text-rose-400 text-xs font-bold uppercase tracking-wider mb-1">Absent</p>
+            <p className="text-3xl font-black text-white">{stats.absent}</p>
+          </div>
+          <div className="h-12 w-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <X size={24} strokeWidth={3} />
+          </div>
+        </div>
+
+        <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-3xl flex items-center justify-between group hover:bg-amber-500/20 transition-all">
+          <div>
+            <p className="text-amber-400 text-xs font-bold uppercase tracking-wider mb-1">Pending</p>
+            <p className="text-3xl font-black text-white">{stats.pending}</p>
+          </div>
+          <div className="h-12 w-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Clock size={24} strokeWidth={3} />
+          </div>
         </div>
       </div>
 
