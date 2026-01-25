@@ -231,7 +231,6 @@ function HackDashboard() {
     }));
   };
 
-  /* Removed invalid printing mode */
 
   if (loading)
     return (

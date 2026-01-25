@@ -20,6 +20,12 @@ function Marks() {
         setLoading(true);
         api.get("/admin/event/" + eventId)
             .then((res) => {
+                console.log("Event Data Debug:", {
+                    totalOg: res.data.event_og?.length,
+                    eventOg: res.data.event_og,
+                    fullData: res.data
+                });
+
                 setEventData(res.data);
                 setTeams(res.data.event_og || []);
 
@@ -96,11 +102,12 @@ function Marks() {
                         return t;
                     })
                 );
+                setLoading(false);
             })
-        setLoading(false)
             .catch(err => {
                 console.error(err);
                 alert("Failed to save marks.");
+                setLoading(false);
             });
     };
 
@@ -137,7 +144,7 @@ function Marks() {
     }
 
     return (
-        <div className="min-h-screen font-poppins bg-[#0a0a0a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] text-white p-4 sm:p-8 relative overflow-hidden">
+        <div className="min-h-screen font-poppins bg-[#0a0a0a] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))] text-white p-4 sm:p-8 relative">
             {/* Background blobs */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
                 <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px]" />
@@ -149,7 +156,12 @@ function Marks() {
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-6 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
                     <div>
                         <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Marks Management</h1>
-                        <p className="text-gray-400 text-sm">Grading Panel for {eventData?.event?.title || "Hackathon"}</p>
+                        <div className="flex items-center gap-3">
+                            <p className="text-gray-400 text-sm">Grading Panel for {eventData?.event?.title || "Hackathon"}</p>
+                            <span className="px-2 py-0.5 rounded-md bg-white/10 text-xs text-gray-300 border border-white/5 font-mono">
+                                Total: {teams.length}
+                            </span>
+                        </div>
                     </div>
 
                     <div className="flex bg-black/40 p-1 rounded-xl">

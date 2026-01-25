@@ -42,6 +42,11 @@ function HackAttd() {
 
   const fetchData = () => {
     api.get("/admin/event/" + event).then((res) => {
+      console.log("Attendance Event Data Debug:", {
+        totalOg: res.data.event_og?.length,
+        eventOg: res.data.event_og,
+        fullData: res.data
+      });
       setEventData(res.data.event);
       setTeams(res.data.event_og || []);
       setActiveAttd(res.data.event.currAttd);
@@ -228,7 +233,7 @@ function HackAttd() {
               <span className="text-xs text-gray-500 font-mono bg-gray-900 px-2 py-1 rounded">Session ID: {currAttd}</span>
             </div>
 
-            <div className="bg-[#111] rounded-2xl border border-gray-800 overflow-hidden print:border-gray-300 print:bg-white print:text-black">
+            <div className="bg-[#111] rounded-2xl border border-gray-800 print:border-gray-300 print:bg-white print:text-black">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#1a1a1a] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800 print:bg-gray-200 print:text-black print:border-gray-400">
@@ -291,6 +296,11 @@ function HackAttd() {
               </table>
             </div>
           </div>
+          <div className="flex justify-end mt-[2750px]">
+            <button className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-2 transition-all border border-gray-700">
+              <ChevronRight className="rotate-180" size={16} /> Back to Marking
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -307,9 +317,14 @@ function HackAttd() {
       {/* Header & Session Selector */}
       <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-4 mb-6 p-4 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-lg">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-            Attendance
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+              Attendance
+            </h1>
+            <span className="px-2 py-0.5 rounded-md bg-white/10 text-xs text-gray-300 border border-white/5 font-mono">
+              Total: {teams.length}
+            </span>
+          </div>
           <div className="flex items-center gap-2 mt-1">
             <div className={`w-2 h-2 rounded-full ${currAttd === activeAttd ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
             <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">
