@@ -86,9 +86,7 @@ function AppContent() {
           <Route
             path="attd"
             element={
-              <ProtectedRoute>
-                <HackAttd />
-              </ProtectedRoute>
+              <HackAttd />
             }
           />
           <Route path="payment" element={<Payement />} />
@@ -103,7 +101,9 @@ function AppContent() {
           <Route
             path="attd"
             element={
-              <Attd />
+              <ProtectedRoute>
+                <Attd />
+              </ProtectedRoute>
             }
           />
           <Route path="payment" element={<Payement />} />
