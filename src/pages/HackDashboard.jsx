@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { saveAs } from "file-saver";
 import socket from "@/lib/socket";
+import Logo from "@/assets/image.png";
 
 function HackDashboard() {
   const { event } = useParams();
@@ -254,16 +255,19 @@ function HackDashboard() {
     <div className="min-h-screen font-poppins bg-[#212121] text-white p-8">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-[#111] p-6 rounded-2xl border border-gray-800 shadow-xl">
-        <div>
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
-            Hackathon Dashboard
-          </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Total Teams: <span className="text-white font-bold">{teams.length}</span>
-          </p>
-          <p>
-            Total Members: <span className="text-white font-bold">{teams.reduce((acc, team) => acc + team.members.length, 0) + teams.length}</span>
-          </p>
+        <div className="flex items-center gap-4">
+          <img src={Logo} alt="Logo" className="w-16 h-16 object-contain rounded-full border-2 border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.3)]" />
+          <div>
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">
+              Hackathon Dashboard
+            </h1>
+            <p className="text-gray-400 text-sm mt-1">
+              Total Teams: <span className="text-white font-bold">{teams.length}</span>
+            </p>
+            <p>
+              Total Members: <span className="text-white font-bold">{teams.reduce((acc, team) => acc + team.members.length, 0) + teams.length}</span>
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-3 items-center justify-center">
@@ -417,6 +421,7 @@ function HackDashboard() {
               {/* Card Body */}
               <div className="p-5 space-y-4 flex-1">
                 {/* Lead Info */}
+                <img src={team.logo} className="w-16 h-16 rounded-full" />
                 <div>
                   <h3 className="text-xs uppercase font-bold text-gray-500 mb-2">
                     Lead Details

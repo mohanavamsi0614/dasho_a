@@ -47,8 +47,16 @@ function HackAttd() {
       setActiveAttd(res.data.event.currAttd);
 
       const sessions = res.data.event.attd || [];
-      if (sessions.length > 0) {
-        setCurrAttd(sessions[sessions.length - 1]);
+      // if (sessions.length > 0) {
+      //   setCurrAttd(sessions[sessions.length - 1]);
+      // }
+      const session = localStorage.getItem("recentAttd")
+      if (session) {
+        console.log("hey")
+        setCurrAttd(session)
+      }
+      else {
+        setCurrAttd(sessions[0])
       }
 
 
@@ -216,7 +224,10 @@ function HackAttd() {
           {eventData?.attd?.map((session) => (
             <button
               key={session}
-              onClick={() => setCurrAttd(session)}
+              onClick={() => {
+                localStorage.setItem("recentAttd", session)
+                setCurrAttd(session)
+              }}
               className={`px-5 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap ${currAttd === session
                 ? "bg-white text-black shadow-[0_2px_10px_rgba(255,255,255,0.2)]"
                 : "text-gray-400 hover:text-white hover:bg-white/5"
