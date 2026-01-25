@@ -103,9 +103,7 @@ function AppContent() {
           <Route
             path="attd"
             element={
-              <ProtectedRoute>
-                <Attd />
-              </ProtectedRoute>
+              <Attd />
             }
           />
           <Route path="payment" element={<Payement />} />
