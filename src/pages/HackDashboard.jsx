@@ -349,7 +349,7 @@ function HackDashboard() {
 
       {teams.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
-          {teams.map((team) => (
+          {teams.map((team, index) => (
             <div
               key={team._id}
               className="bg-[#1a1a1a] border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-all shadow-lg group flex flex-col"
@@ -357,6 +357,7 @@ function HackDashboard() {
               {/* Card Header */}
               <div className="p-5 border-b border-gray-800 bg-[#161616] relative">
                 <div className="flex justify-between items-start mb-2">
+                  {index + 1}
                   <h2
                     className="text-lg font-bold text-white truncate max-w-[70%]"
                     title={team.teamName}
