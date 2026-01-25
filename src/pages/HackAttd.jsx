@@ -190,10 +190,110 @@ function HackAttd() {
     return "bg-gray-700";
   };
 
+  const [viewMode, setViewMode] = useState("marking"); // "marking" | "report"
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  // Report View Implementation
+  if (viewMode === "report") {
+    return (
+      <div className="min-h-screen font-poppins bg-[#050505] text-white p-8">
+        <div className="flex justify-between items-center mb-8 print:hidden">
+          <button
+            onClick={() => setViewMode("marking")}
+            className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white flex items-center gap-2 transition-all border border-gray-700"
+          >
+            <ChevronRight className="rotate-180" size={16} /> Back to Marking
+          </button>
+          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Attendance Report</h1>
+          <button
+            onClick={() => window.print()}
+            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20"
+          >
+            Print Report
+          </button>
+        </div>
+
+        <div className="space-y-12">
+          {eventData?.attd?.map((session) => (
+            <div key={session} className="break-inside-avoid">
+              <div className="flex items-center gap-3 mb-4 border-b border-gray-800 pb-2">
+                <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                <h2 className="text-xl font-bold uppercase tracking-wider text-gray-200">{session}</h2>
+                <span className="text-xs text-gray-500 font-mono bg-gray-900 px-2 py-1 rounded">Session ID: {session}</span>
+              </div>
+
+              <div className="bg-[#111] rounded-2xl border border-gray-800 overflow-hidden print:border-gray-300 print:bg-white print:text-black">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#1a1a1a] text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800 print:bg-gray-200 print:text-black print:border-gray-400">
+                      <th className="p-4 font-bold">#</th>
+                      <th className="p-4 font-bold">Team</th>
+                      <th className="p-4 font-bold">Participant</th>
+                      <th className="p-4 font-bold">Role</th>
+                      <th className="p-4 font-bold">Status</th>
+                      <th className="p-4 font-bold">Proof</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800 print:divide-gray-300">
+                    {teams.map((team, tIdx) => {
+                      const participants = [team.lead, ...team.members];
+                      return participants.map((p, pIdx) => {
+                        const status = p?.attd?.[session]?.status;
+                        const img = p?.attd?.[session]?.img;
+                        const isPresent = status === 'Present';
+
+                        return (
+                          <tr key={`${team._id}-${pIdx}`} className="hover:bg-white/[0.02] transition-colors print:hover:bg-transparent">
+                            <td className="p-4 text-xs text-gray-600 font-mono">{tIdx + 1}.{pIdx + 1}</td>
+                            <td className="p-4 font-medium text-gray-300 print:text-black">{pIdx === 0 ? team.teamName : ''}</td>
+                            <td className="p-4">
+                              <div className="font-medium text-gray-200 print:text-black">{p.name}</div>
+                              <div className="text-xs text-gray-500">{p.email || p.phone}</div>
+                            </td>
+                            <td className="p-4">
+                              <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${pIdx === 0 ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'text-gray-500 bg-gray-800/50'}`}>
+                                {pIdx === 0 ? 'Lead' : 'Member'}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              <span className={`px-2 py-1 rounded text-xs font-bold border ${isPresent
+                                ? 'bg-green-500/10 text-green-400 border-green-500/20 print:text-green-700 print:border-green-600'
+                                : status === 'Absent'
+                                  ? 'bg-red-500/10 text-red-400 border-red-500/20 print:text-red-700 print:border-red-600'
+                                  : 'bg-gray-800 text-gray-500 border-gray-700 print:text-gray-600 print:border-gray-400'
+                                }`}>
+                                {status || 'Pending'}
+                              </span>
+                            </td>
+                            <td className="p-4">
+                              {img ? (
+                                <a href={img} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 text-xs font-medium group">
+                                  <div className="w-8 h-8 rounded bg-black  border border-gray-700 relative">
+                                    <img src={img} className="w-full h-full object-cover" />
+                                  </div>
+                                  <span className="group-hover:underline">View</span>
+                                </a>
+                              ) : (
+                                <span className="text-xs text-gray-600 italic">No Proof</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -247,15 +347,23 @@ function HackAttd() {
 
         <div>
           {currAttd && (
-            <button
-              onClick={() => handleSessionToggle(currAttd === activeAttd ? "close" : "open", currAttd)}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border shadow-lg ${currAttd === activeAttd
-                ? "bg-green-500 text-black border-green-400 hover:bg-green-400 shadow-green-500/20"
-                : "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20"
-                }`}
-            >
-              {currAttd === activeAttd ? "Stop Session" : "Start Session"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setViewMode("report")}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+              >
+                View Report
+              </button>
+              <button
+                onClick={() => handleSessionToggle(currAttd === activeAttd ? "close" : "open", currAttd)}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border shadow-lg ${currAttd === activeAttd
+                  ? "bg-green-500 text-black border-green-400 hover:bg-green-400 shadow-green-500/20"
+                  : "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20"
+                  }`}
+              >
+                {currAttd === activeAttd ? "Stop Session" : "Start Session"}
+              </button>
+            </div>
           )}
         </div>
       </div>

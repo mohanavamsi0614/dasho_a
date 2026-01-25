@@ -10,7 +10,6 @@ function HackDashboard() {
   const [eventData, setEventData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [teams, setTeams] = useState([]); // Local state for immediate UI updates
-
   const [editingTeam, setEditingTeam] = useState(null);
   const [expandedTeamId, setExpandedTeamId] = useState(null);
 
@@ -101,13 +100,9 @@ function HackDashboard() {
     }
 
     headers.push("Payment", "UPI", "Verified");
+    eventData.event.attd.forEach((i) => headers.push(i))
+    eventData.event.attd.forEach((i) => headers.push(i + "-" + "img"))
 
-    // Round headers
-    for (let round of eventData.event.rounds) {
-      for (let cat of round.catogary) {
-        headers.push(`${round.name}-${cat.title}`);
-      }
-    }
 
     let csvRows = [headers];
 
@@ -115,20 +110,8 @@ function HackDashboard() {
       if (!eventData.event?.other) return [];
       return eventData.event.other.map((f) => person[f.title] || "-");
     };
-
-    const getMarks = (team) => {
-      let res = [];
-      for (let round of eventData.event.rounds) {
-        const teamRound = team.marks?.find((m) => m.name === round.name);
-        for (let cat of round.catogary) {
-          res.push(teamRound?.marks?.[cat.title] ?? "-");
-        }
-      }
-      return res;
-    };
-
     teams.forEach((team) => {
-      csvRows.push([
+      const leadRow = [
         team.teamName,
         "Lead",
         team.lead.name,
@@ -143,11 +126,13 @@ function HackDashboard() {
         team.payment ? "Paid" : "Pending",
         team.paymentDetails?.upi || "-",
         team.verified ? "Yes" : "No",
-        ...getMarks(team)
-      ]);
+      ];
+      eventData.event.attd.forEach((i) => leadRow.push(team.lead?.attd?.[i]?.status || "-"));
+      eventData.event.attd.forEach((i) => leadRow.push(team.lead?.attd?.[i]?.img || "-"));
+      csvRows.push(leadRow);
 
       team.members.forEach((m) => {
-        csvRows.push([
+        const memberRow = [
           team.teamName,
           "Member",
           m.name,
@@ -162,8 +147,10 @@ function HackDashboard() {
           team.payment ? "Paid" : "Pending",
           team.paymentDetails?.upi || "-",
           team.verified ? "Yes" : "No",
-          ...getMarks(team)
-        ]);
+        ];
+        eventData.event.attd.forEach((i) => memberRow.push(m?.attd?.[i]?.status || "-"));
+        eventData.event.attd.forEach((i) => memberRow.push(m?.attd?.[i]?.img || "-"));
+        csvRows.push(memberRow);
       });
     });
 
@@ -243,6 +230,8 @@ function HackDashboard() {
       },
     }));
   };
+
+  /* Removed invalid printing mode */
 
   if (loading)
     return (
