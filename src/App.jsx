@@ -19,6 +19,7 @@ import Marks from './pages/Marks'
 import Update from './pages/Update'
 import socket from './lib/socket'
 import { useEffect } from 'react'
+import HackProblemStatements from './pages/HackProblemStatements'
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -92,6 +93,7 @@ function AppContent() {
           <Route path="payment" element={<Payement />} />
           <Route path="update" element={<Update />} />
           <Route path="marks" element={<Marks />} />
+          <Route path="problem-statements" element={<HackProblemStatements />} />
         </Route>
 
         {/* QR EVENT ROUTES */}

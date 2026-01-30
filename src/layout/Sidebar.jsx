@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, CheckSquare, CreditCard, RefreshCw, Menu, X, Home } from "lucide-react";
+import { LayoutDashboard, CheckSquare, CreditCard, RefreshCw, Menu, X, Home, BrainIcon } from "lucide-react";
 import { useState } from "react";
 
 const Sidebar = () => {
@@ -11,6 +11,7 @@ const Sidebar = () => {
         { path: "marks", label: "Marks", icon: LayoutDashboard },
         { path: "payment", label: "Payment", icon: CreditCard },
         { path: "update", label: "Update", icon: RefreshCw },
+        { path: "problem-statements", label: "Problem Statement", icon: BrainIcon },
     ];
 
     return (
