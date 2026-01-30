@@ -4,10 +4,10 @@ import { useParams } from "react-router";
 
 function Update() {
     const [update, setUpdate] = useState("");
-    const { eventId } = useParams();
+    const { event } = useParams();
 
     const handleSubmit = () => {
-        socket.emit("update", { update: update, id: eventId });
+        socket.emit("update", { update: update, id: event });
     };
 
     return (

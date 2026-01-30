@@ -49,7 +49,7 @@ function Marks() {
 
     useEffect(() => {
         if (selectedTeam && selectedRound) {
-            const existingMarks = selectedTeam.marks?.filter(m => m.name === selectedRound.name)[0]?.marks || {};
+            const existingMarks = (selectedTeam.marks || []).filter(m => m.name === selectedRound.name)[0]?.marks || {};
             setCurrentMarks(existingMarks);
         }
     }, [selectedTeam, selectedRound]);
@@ -94,7 +94,7 @@ function Marks() {
                             return {
                                 ...t,
                                 marks: [
-                                    ...t.marks?.filter(m => m.name !== selectedRound.name),
+                                    ...(t.marks || []).filter(m => m.name !== selectedRound.name),
                                     { name: selectedRound.name, marks: { ...currentMarks }, total: calculateTotal(currentMarks) }
                                 ]
                             }
@@ -235,7 +235,7 @@ function Marks() {
                                     <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                                         {getFilteredTeams().map(team => {
                                             const isSelected = selectedTeam?._id === team._id;
-                                            const hasMarks = team.marks?.filter(m => m.name === selectedRound.name)[0]?.marks?.total;
+                                            const hasMarks = (team.marks || []).filter(m => m.name === selectedRound.name)[0]?.marks?.total;
                                             return (
                                                 <div
                                                     key={team._id}
@@ -247,7 +247,7 @@ function Marks() {
                                                 >
                                                     <div>
                                                         <p className={`text-sm font-semibold ${isSelected ? "text-indigo-300" : "text-gray-300"}`}>{team.teamName}</p>
-                                                        <p className={`text-xs text-gray-400 ${isSelected ? "text-indigo-300" : "text-gray-300"}`}>{team.marks?.filter(m => m.name === selectedRound.name)[0]?.marks?.total}</p>
+                                                        <p className={`text-xs text-gray-400 ${isSelected ? "text-indigo-300" : "text-gray-300"}`}>{(team.marks || []).filter(m => m.name === selectedRound.name)[0]?.marks?.total}</p>
                                                     </div>
                                                     {hasMarks && (
                                                         <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
@@ -277,7 +277,7 @@ function Marks() {
                                                 <div className="text-right">
                                                     <div className="text-sm text-gray-400 mb-1">Current Score</div>
                                                     <div className="text-4xl font-mono font-bold text-indigo-400">
-                                                        {selectedTeam.marks?.filter(m => m.name === selectedRound.name)[0]?.marks?.total || 0}
+                                                        {(selectedTeam.marks || []).filter(m => m.name === selectedRound.name)[0]?.marks?.total || 0}
                                                         <span className="text-lg text-gray-600"> / {selectedRound.total}</span>
                                                     </div>
                                                 </div>
@@ -355,7 +355,7 @@ function Marks() {
                                             {[...teams]
                                                 .map(t => ({
                                                     ...t,
-                                                    totalScore: t.marks?.filter(m => m.name === selectedRound.name)[0]?.total
+                                                    totalScore: (t.marks || []).filter(m => m.name === selectedRound.name)[0]?.total
                                                 }))
                                                 .sort((a, b) => b.totalScore - a.totalScore)
                                                 .map((team, idx) => (
@@ -364,7 +364,7 @@ function Marks() {
                                                         <td className="p-5 font-bold text-white">{team.teamName}</td>
                                                         {selectedRound.catogary.map((cat, i) => (
                                                             <td key={i} className="p-5 text-gray-400">
-                                                                {team.marks?.filter(m => m.name === selectedRound.name)[0]?.marks?.[cat.title] || "-"}
+                                                                {(team.marks || []).filter(m => m.name === selectedRound.name)[0]?.marks?.[cat.title] || "-"}
                                                             </td>
                                                         ))}
                                                         <td className="p-5 font-bold text-indigo-400 text-lg">

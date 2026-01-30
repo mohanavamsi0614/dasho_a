@@ -103,6 +103,17 @@ function HackDashboard() {
     eventData.event.attd.forEach((i) => headers.push(i))
     eventData.event.attd.forEach((i) => headers.push(i + "-" + "img"))
 
+    if (eventData.event?.rounds) {
+      eventData.event.rounds.forEach(round => {
+        headers.push(`${round.name} (Total)`);
+        if (round.catogary) {
+          round.catogary.forEach(cat => {
+            headers.push(`${round.name} - ${cat.title}`);
+          });
+        }
+      });
+    }
+
 
     let csvRows = [headers];
 
@@ -129,6 +140,18 @@ function HackDashboard() {
       ];
       eventData.event.attd.forEach((i) => leadRow.push(team.lead?.attd?.[i]?.status || "-"));
       eventData.event.attd.forEach((i) => leadRow.push(team.lead?.attd?.[i]?.img || "-"));
+
+      if (eventData.event?.rounds) {
+        eventData.event.rounds.forEach(round => {
+          const roundData = team.marks?.find(m => m.name === round.name);
+          leadRow.push(roundData?.total || "-");
+          if (round.catogary) {
+            round.catogary.forEach(cat => {
+              leadRow.push(roundData?.marks?.[cat.title] || "-");
+            });
+          }
+        });
+      }
       csvRows.push(leadRow);
 
       team.members.forEach((m) => {
@@ -150,6 +173,18 @@ function HackDashboard() {
         ];
         eventData.event.attd.forEach((i) => memberRow.push(m?.attd?.[i]?.status || "-"));
         eventData.event.attd.forEach((i) => memberRow.push(m?.attd?.[i]?.img || "-"));
+
+        if (eventData.event?.rounds) {
+          eventData.event.rounds.forEach(round => {
+            const roundData = team.marks?.find(m => m.name === round.name);
+            memberRow.push(roundData?.total || "-");
+            if (round.catogary) {
+              round.catogary.forEach(cat => {
+                memberRow.push(roundData?.marks?.[cat.title] || "-");
+              });
+            }
+          });
+        }
         csvRows.push(memberRow);
       });
     });
@@ -442,9 +477,21 @@ function HackDashboard() {
                     {team.marks && team.marks.length > 0 ? (
                       <div className="space-y-0.5">
                         {team.marks.map((m, idx) => (
-                          <div key={idx} className="flex justify-between">
-                            <span className="text-gray-400">{m.name}:</span>
-                            <span className="text-white">{m.total}</span>
+                          <div key={idx} className="mb-2 last:mb-0">
+                            <div className="flex justify-between items-center border-b border-gray-700 pb-1 mb-1">
+                              <span className="text-gray-300 font-medium text-[11px]">{m.name}</span>
+                              <span className="text-indigo-400 font-bold">{m.total}</span>
+                            </div>
+                            {m.marks && (
+                              <div className="space-y-0.5 ml-1">
+                                {Object.entries(m.marks).map(([cat, val]) => (
+                                  <div key={cat} className="flex justify-between items-center">
+                                    <span className="text-gray-500 text-[10px]">{cat}</span>
+                                    <span className="text-gray-400 text-[10px]">{val}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
