@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import { useParams } from "react-router";
-import { Plus, X, Eye, Edit2, FileText, ChevronRight, BookOpen, Trash2 } from "lucide-react";
+import { Plus, X, Eye, Edit2, FileText, ChevronRight, BookOpen, Trash2, Users } from "lucide-react";
 import { markdown } from "markdown";
 
 function HackProblemStatements() {
@@ -12,6 +12,9 @@ function HackProblemStatements() {
     const [newPS, setNewPS] = useState({ title: "", description: "" });
     const [activeTab, setActiveTab] = useState("write");
     const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState({ assigned: {}, unassigned: [] });
+    const [teams, setTeams] = useState([])
+    const [isUnassignedModalOpen, setIsUnassignedModalOpen] = useState(false);
 
     useEffect(() => {
         fetchProblemStatements();
@@ -21,13 +24,14 @@ function HackProblemStatements() {
         setLoading(true);
         api.get("/admin/event/" + event).then((res) => {
             setProblemStatements(res.data.event.PS || []);
+            setTeams(res.data.event_og || res.event_og || [])
             setLoading(false);
         }).catch(err => {
             console.error(err);
             setLoading(false);
         });
     };
-
+    console.log(teams || "")
     const handleSubmit = () => {
         if (!newPS.title || !newPS.description) return;
 
@@ -73,7 +77,27 @@ function HackProblemStatements() {
             return { __html: text };
         }
     };
-
+    useEffect(() => {
+        if (teams && teams.length > 0) {
+            const newStats = { assigned: {}, unassigned: [] };
+            teams.forEach(team => {
+                if (team.PS) {
+                    const psTitle = typeof team.PS === 'object' ? team.PS.title : team.PS;
+                    if (psTitle) {
+                        if (!newStats.assigned[psTitle]) {
+                            newStats.assigned[psTitle] = [];
+                        }
+                        newStats.assigned[psTitle].push(team.teamName);
+                    } else {
+                        newStats.unassigned.push(team.teamName);
+                    }
+                } else {
+                    newStats.unassigned.push(team.teamName);
+                }
+            });
+            setStats(newStats);
+        }
+    }, [teams]);
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
@@ -99,13 +123,22 @@ function HackProblemStatements() {
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">Manage and view hackathon problem statements</p>
                     </div>
-                    <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="px-6 py-3 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group"
-                    >
-                        <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-                        Add New
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setIsUnassignedModalOpen(true)}
+                            className="px-6 py-3 rounded-xl font-bold bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 hover:text-white transition-all flex items-center gap-2"
+                        >
+                            <Users size={20} />
+                            Unassigned ({stats.unassigned?.length || 0})
+                        </button>
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="px-6 py-3 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group"
+                        >
+                            <Plus size={20} className="group-hover:rotate-90 transition-transform" />
+                            Add New
+                        </button>
+                    </div>
                 </div>
 
                 {/* Grid */}
@@ -135,6 +168,11 @@ function HackProblemStatements() {
                                             {ps.title}
                                         </h2>
                                     </div>
+                                    <div className="flex flex-col items-end justify-start min-w-[60px]">
+                                        <div className="bg-indigo-500/10 text-indigo-400 text-xs font-bold px-2 py-1 rounded-lg border border-indigo-500/20 whitespace-nowrap">
+                                            {stats?.assigned?.[ps.title]?.length || 0} Teams
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="mt-auto pt-4 border-t border-white/5 flex justify-between items-center text-sm text-gray-500 group-hover:text-indigo-300 transition-colors">
@@ -155,143 +193,225 @@ function HackProblemStatements() {
             </div>
 
             {/* ADD Modal */}
-            {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-                    <div className="bg-[#111] border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        {/* Modal Header */}
-                        <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
-                            <h3 className="text-xl font-bold text-white">Add Problem Statement</h3>
-                            <button
-                                onClick={() => setIsAddModalOpen(false)}
-                                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                            >
-                                <X size={20} />
-                            </button>
-                        </div>
+            {
+                isAddModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+                        <div className="bg-[#111] border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                            {/* Modal Header */}
+                            <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
+                                <h3 className="text-xl font-bold text-white">Add Problem Statement</h3>
+                                <button
+                                    onClick={() => setIsAddModalOpen(false)}
+                                    className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
 
-                        {/* Modal Body */}
-                        <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-400">Title</label>
-                                <input
-                                    type="text"
-                                    placeholder="Enter concise title..."
-                                    value={newPS.title}
-                                    onChange={(e) => setNewPS({ ...newPS, title: e.target.value })}
-                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-gray-600"
+                            {/* Modal Body */}
+                            <div className="p-6 overflow-y-auto custom-scrollbar space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-400">Title</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter concise title..."
+                                        value={newPS.title}
+                                        onChange={(e) => setNewPS({ ...newPS, title: e.target.value })}
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-gray-600"
+                                    />
+                                </div>
+
+                                <div className="space-y-2 flex-1 flex flex-col">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-gray-400">Description</label>
+                                        <div className="flex bg-black/50 rounded-lg p-1 border border-white/10">
+                                            <button
+                                                onClick={() => setActiveTab("write")}
+                                                className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${activeTab === "write" ? "bg-indigo-600 text-white shadow-lg" : "text-gray-500 hover:text-gray-300"
+                                                    }`}
+                                            >
+                                                <Edit2 size={12} /> Write
+                                            </button>
+                                            <button
+                                                onClick={() => setActiveTab("preview")}
+                                                className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${activeTab === "preview" ? "bg-indigo-600 text-white shadow-lg" : "text-gray-500 hover:text-gray-300"
+                                                    }`}
+                                            >
+                                                <Eye size={12} /> Preview
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {activeTab === "write" ? (
+                                        <textarea
+                                            placeholder="Enter detailed description (Markdown supported)..."
+                                            value={newPS.description}
+                                            onChange={(e) => setNewPS({ ...newPS, description: e.target.value })}
+                                            className="w-full h-64 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-gray-600 resize-none font-mono text-sm leading-relaxed"
+                                        />
+                                    ) : (
+                                        <div
+                                            className="w-full h-64 bg-black/30 border border-white/10 rounded-xl px-6 py-4 overflow-y-auto prose prose-invert prose-sm max-w-none custom-scrollbar"
+                                            dangerouslySetInnerHTML={renderMarkdown(newPS.description || "*No description yet*")}
+                                        />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="p-6 border-t border-white/5 bg-white/[0.02] flex justify-end gap-3">
+                                <button
+                                    onClick={() => setIsAddModalOpen(false)}
+                                    className="px-5 py-2.5 rounded-xl font-medium text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={!newPS.title || !newPS.description}
+                                    className="px-6 py-2.5 rounded-xl font-bold bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                >
+                                    Submit Statement
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* VIEW DETAILS Modal */}
+            {
+                selectedPS && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200"
+                        onClick={() => setSelectedPS(null)}
+                    >
+                        <div
+                            className="bg-[#111] border border-white/10 rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-5 duration-300"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            {/* Modal Header */}
+                            <div className="flex justify-between items-start p-6 md:p-8 border-b border-white/5 bg-white/[0.02]">
+                                <div>
+                                    <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight">{selectedPS.title}</h3>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedPS(null)}
+                                    className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/5 shrink-0 ml-4"
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
+                                <div
+                                    className="prose prose-invert prose-lg max-w-none prose-headings:text-indigo-300 prose-a:text-indigo-400 prose-strong:text-white text-gray-300 leading-relaxed"
+                                    dangerouslySetInnerHTML={renderMarkdown(selectedPS.description)}
                                 />
                             </div>
 
-                            <div className="space-y-2 flex-1 flex flex-col">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-sm font-medium text-gray-400">Description</label>
-                                    <div className="flex bg-black/50 rounded-lg p-1 border border-white/10">
-                                        <button
-                                            onClick={() => setActiveTab("write")}
-                                            className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${activeTab === "write" ? "bg-indigo-600 text-white shadow-lg" : "text-gray-500 hover:text-gray-300"
-                                                }`}
-                                        >
-                                            <Edit2 size={12} /> Write
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab("preview")}
-                                            className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${activeTab === "preview" ? "bg-indigo-600 text-white shadow-lg" : "text-gray-500 hover:text-gray-300"
-                                                }`}
-                                        >
-                                            <Eye size={12} /> Preview
-                                        </button>
+                            {/* Assigned Teams Section */}
+                            <div className="px-6 md:px-8 pb-6 md:pb-8">
+                                <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                    <Users size={18} className="text-indigo-400" />
+                                    Assigned Teams
+                                    <span className="text-sm font-normal text-gray-500 ml-2 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                                        {stats?.assigned?.[selectedPS.title]?.length || 0}
+                                    </span>
+                                </h4>
+                                {stats?.assigned?.[selectedPS.title]?.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                        {stats.assigned[selectedPS.title].map((teamName, idx) => (
+                                            <div key={idx} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300 font-medium">
+                                                {idx + 1}. {teamName}
+                                            </div>
+                                        ))}
                                     </div>
-                                </div>
-
-                                {activeTab === "write" ? (
-                                    <textarea
-                                        placeholder="Enter detailed description (Markdown supported)..."
-                                        value={newPS.description}
-                                        onChange={(e) => setNewPS({ ...newPS, description: e.target.value })}
-                                        className="w-full h-64 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-gray-600 resize-none font-mono text-sm leading-relaxed"
-                                    />
                                 ) : (
-                                    <div
-                                        className="w-full h-64 bg-black/30 border border-white/10 rounded-xl px-6 py-4 overflow-y-auto prose prose-invert prose-sm max-w-none custom-scrollbar"
-                                        dangerouslySetInnerHTML={renderMarkdown(newPS.description || "*No description yet*")}
-                                    />
+                                    <div className="text-gray-500 italic text-sm bg-white/5 rounded-xl p-4 text-center border border-white/5 border-dashed">
+                                        No teams have selected this problem statement yet.
+                                    </div>
                                 )}
                             </div>
-                        </div>
 
-                        {/* Modal Footer */}
-                        <div className="p-6 border-t border-white/5 bg-white/[0.02] flex justify-end gap-3">
-                            <button
-                                onClick={() => setIsAddModalOpen(false)}
-                                className="px-5 py-2.5 rounded-xl font-medium text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSubmit}
-                                disabled={!newPS.title || !newPS.description}
-                                className="px-6 py-2.5 rounded-xl font-bold bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                            >
-                                Submit Statement
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* VIEW DETAILS Modal */}
-            {selectedPS && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200"
-                    onClick={() => setSelectedPS(null)}
-                >
-                    <div
-                        className="bg-[#111] border border-white/10 rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-5 duration-300"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        {/* Modal Header */}
-                        <div className="flex justify-between items-start p-6 md:p-8 border-b border-white/5 bg-white/[0.02]">
-                            <div>
-                                <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight">{selectedPS.title}</h3>
-                            </div>
-                            <button
-                                onClick={() => setSelectedPS(null)}
-                                className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/5 shrink-0 ml-4"
-                            >
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        {/* Modal Body */}
-                        <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
-                            <div
-                                className="prose prose-invert prose-lg max-w-none prose-headings:text-indigo-300 prose-a:text-indigo-400 prose-strong:text-white text-gray-300 leading-relaxed"
-                                dangerouslySetInnerHTML={renderMarkdown(selectedPS.description)}
-                            />
-                        </div>
-
-                        {/* Modal Footer */}
-                        <div className="p-6 border-t border-white/5 bg-white/[0.02] flex justify-between">
-                            {selectedPS.originalIndex !== undefined && (
+                            {/* Modal Footer */}
+                            <div className="p-6 border-t border-white/5 bg-white/[0.02] flex justify-between">
+                                {selectedPS.originalIndex !== undefined && (
+                                    <button
+                                        onClick={(e) => handleDelete(selectedPS.originalIndex, e)}
+                                        className="px-6 py-3 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center gap-2"
+                                    >
+                                        <Trash2 size={18} /> Delete
+                                    </button>
+                                )}
                                 <button
-                                    onClick={(e) => handleDelete(selectedPS.originalIndex, e)}
-                                    className="px-6 py-3 rounded-xl font-bold bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center gap-2"
+                                    onClick={() => setSelectedPS(null)}
+                                    className="px-6 py-3 rounded-xl font-bold bg-white text-black hover:bg-gray-200 transition-colors shadow-lg ml-auto"
                                 >
-                                    <Trash2 size={18} /> Delete
+                                    Close
                                 </button>
-                            )}
-                            <button
-                                onClick={() => setSelectedPS(null)}
-                                className="px-6 py-3 rounded-xl font-bold bg-white text-black hover:bg-gray-200 transition-colors shadow-lg ml-auto"
-                            >
-                                Close
-                            </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
-        </div>
+            {
+                isUnassignedModalOpen && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200"
+                        onClick={() => setIsUnassignedModalOpen(false)}
+                    >
+                        <div
+                            className="bg-[#111] border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-5 duration-300"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/[0.02]">
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <Users size={20} className="text-gray-400" />
+                                    Unassigned Teams
+                                    <span className="text-sm font-normal text-gray-500 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                                        {stats?.unassigned?.length || 0}
+                                    </span>
+                                </h3>
+                                <button
+                                    onClick={() => setIsUnassignedModalOpen(false)}
+                                    className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors border border-white/5"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div className="p-6 overflow-y-auto custom-scrollbar">
+                                {stats?.unassigned?.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {stats.unassigned.map((teamName, idx) => (
+                                            <div key={idx} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-gray-300 font-medium">
+                                                {idx + 1}. {teamName}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-gray-500 italic text-center py-12 bg-white/[0.02] rounded-2xl border border-white/5 border-dashed">
+                                        <div className="flex justify-center mb-3 opacity-50"><Users size={32} /></div>
+                                        All teams have selected a problem statement!
+                                    </div>
+                                )}
+                            </div>
+                            <div className="p-6 border-t border-white/5 bg-white/[0.02] flex justify-end">
+                                <button
+                                    onClick={() => setIsUnassignedModalOpen(false)}
+                                    className="px-6 py-2.5 rounded-xl font-bold bg-white text-black hover:bg-gray-200 transition-colors shadow-lg"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+        </div >
     );
 }
 

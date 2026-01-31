@@ -233,7 +233,7 @@ function Marks() {
                                     </div>
 
                                     <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                                        {getFilteredTeams().map(team => {
+                                        {getFilteredTeams().map((team, ind) => {
                                             const isSelected = selectedTeam?._id === team._id;
                                             const hasMarks = (team.marks || []).filter(m => m.name === selectedRound.name)[0]?.marks?.total;
                                             return (
@@ -246,7 +246,7 @@ function Marks() {
                                                         }`}
                                                 >
                                                     <div>
-                                                        <p className={`text-sm font-semibold ${isSelected ? "text-indigo-300" : "text-gray-300"}`}>{team.teamName}</p>
+                                                        <p className={`text-sm font-semibold ${isSelected ? "text-indigo-300" : "text-gray-300"}`}>{ind + 1}.{team.teamName}</p>
                                                         <p className={`text-xs text-gray-400 ${isSelected ? "text-indigo-300" : "text-gray-300"}`}>{(team.marks || []).filter(m => m.name === selectedRound.name)[0]?.marks?.total}</p>
                                                     </div>
                                                     {hasMarks && (
@@ -274,15 +274,24 @@ function Marks() {
                                                         <span>{selectedTeam.lead?.college}</span>
                                                     </div>
                                                 </div>
+                                                <div>
+                                                    <button
+                                                        onClick={handleNextTeam}
+                                                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors"
+                                                    >
+                                                        Next Team
+                                                    </button>
+                                                </div>
                                                 <div className="text-right">
                                                     <div className="text-sm text-gray-400 mb-1">Current Score</div>
                                                     <div className="text-4xl font-mono font-bold text-indigo-400">
-                                                        {(selectedTeam.marks || []).filter(m => m.name === selectedRound.name)[0]?.marks?.total || 0}
+                                                        {currentMarks?.total || 0}
                                                         <span className="text-lg text-gray-600"> / {selectedRound.total}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
+                                            <div className="text-center text-lg text-white mb-4 flex border p-2 rounded-lg"><p className="font-bold">Problem Statement Title: </p> <p className="ml-2">{selectedTeam.PS.title}</p></div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 overflow-y-auto pr-2 custom-scrollbar max-h-[400px]">
                                                 {selectedRound.catogary.map((cat, idx) => (
                                                     <div key={idx} className="bg-black/20 p-5 rounded-2xl border border-white/5 group hover:border-white/10 transition-colors">
