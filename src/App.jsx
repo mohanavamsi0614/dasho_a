@@ -7,19 +7,21 @@ import EventLayout from "./layout/Layout"
 import Home from './pages/Home'
 import Auth from './pages/Auth'
 import Profile from './pages/Profile'
-import QRForm from './pages/QRForm'
-import QRScanner from './pages/QRScanner'
-import HackathonForm from './pages/HackathonForm'
-import QRDashboard from './pages/QRDashboard'
-import HackDashboard from './pages/HackDashboard'
-import Attd from './pages/Attd'
-import HackAttd from './pages/HackAttd'
-import Payement from './pages/Payement'
-import Marks from './pages/Marks'
-import Update from './pages/Update'
+import QRForm from './pages/qr/Form'
+import QRScanner from './pages/qr/Scanner'
+import HackathonCreate from './pages/hackathon/Create'
+import QRDashboard from './pages/qr/Dashboard'
+import HackDashboard from './pages/hackathon/Dashboard'
+import Attd from './pages/qr/Attendance'
+import HackAttd from './pages/hackathon/Attendance'
+import Payement from './pages/hackathon/Payment'
+import Marks from './pages/hackathon/Marks'
+import Update from './pages/hackathon/Update'
 import socket from './lib/socket'
 import { useEffect } from 'react'
-import HackProblemStatements from './pages/HackProblemStatements'
+import HackProblemStatements from './pages/hackathon/ProblemStatements'
+import HackEvent from './pages/hackathon/Event'
+import HackathonEdit from './pages/hackathon/Edit'
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -77,13 +79,15 @@ function AppContent() {
           path="/hackthon"
           element={
             <ProtectedRoute>
-              <HackathonForm />
+              <HackathonCreate />
             </ProtectedRoute>
           }
         />
 
         <Route path="/hack/:event" element={<EventLayout />}>
-          <Route index element={<HackDashboard />} />
+          <Route index element={<HackEvent />} />
+          <Route path="edit" element={<HackathonEdit />} />
+          <Route path='dashboard' element={<HackDashboard />} />
           <Route
             path="attd"
             element={

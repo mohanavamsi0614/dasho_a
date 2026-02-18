@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
-import api from "../lib/api";
+import api from "@/lib/api";
 import { useParams } from "react-router";
 
 const QRScanner = () => {

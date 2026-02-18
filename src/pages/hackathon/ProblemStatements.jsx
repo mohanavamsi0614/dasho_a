@@ -116,28 +116,36 @@ function HackProblemStatements() {
 
             <div className="relative z-10 max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8 p-6 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-lg">
-                    <div>
-                        <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-                            Problem Statements
-                        </h1>
-                        <p className="text-gray-400 text-sm mt-1">Manage and view hackathon problem statements</p>
-                    </div>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={() => setIsUnassignedModalOpen(true)}
-                            className="px-6 py-3 rounded-xl font-bold bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 hover:text-white transition-all flex items-center gap-2"
-                        >
-                            <Users size={20} />
-                            Unassigned ({stats.unassigned?.length || 0})
-                        </button>
-                        <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="px-6 py-3 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group"
-                        >
-                            <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-                            Add New
-                        </button>
+                <div className="relative flex flex-col md:flex-row justify-between items-center gap-4 mb-8 p-8 rounded-3xl bg-[#161616] border border-white/10 shadow-2xl overflow-hidden">
+                    {/* Banner Overlay */}
+                    {/* Note: We need eventData to get bannerUrl. Currently only fetching PS. ProblemStatements component might need to fetch full event or generic style if data missing. Assuming generic for now or updated API call if needed. Actually fetchProblemStatements gets full event data. */}
+                    {/* Let's verify if `problemStatements` came from `res.data.event`. The API call sets `setProblemStatements(res.data.event.PS)`. We might need to store the full event object to access bannerUrl. */}
+                    {/* Adjusting state in next step or assuming generic dark header for now to match style without banner if data not available immediately. */}
+                    <div className="z-0 absolute inset-0 bg-gradient-to-r from-indigo-900/20 to-emerald-900/20 opacity-30"></div>
+
+                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-center w-full gap-4">
+                        <div>
+                            <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                                Problem Statements
+                            </h1>
+                            <p className="text-gray-400 text-sm mt-1">Manage and view hackathon problem statements</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setIsUnassignedModalOpen(true)}
+                                className="px-6 py-3 rounded-xl font-bold bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10 hover:text-white transition-all flex items-center gap-2"
+                            >
+                                <Users size={20} />
+                                Unassigned ({stats.unassigned?.length || 0})
+                            </button>
+                            <button
+                                onClick={() => setIsAddModalOpen(true)}
+                                className="px-6 py-3 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group"
+                            >
+                                <Plus size={20} className="group-hover:rotate-90 transition-transform" />
+                                Add New
+                            </button>
+                        </div>
                     </div>
                 </div>
 

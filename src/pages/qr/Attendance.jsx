@@ -1,4 +1,4 @@
-import api from "../lib/api";
+import api from "@/lib/api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 
@@ -38,8 +38,8 @@ function QrDashboard() {
         <button
           onClick={toggleStatus}
           className={`px-5 py-2 rounded-xl text-white font-semibold shadow-md transition-all duration-300 ${eventData.event?.status
-              ? "bg-[#E16254] hover:bg-red-700"
-              : "bg-green-600 hover:bg-green-700"
+            ? "bg-[#E16254] hover:bg-red-700"
+            : "bg-green-600 hover:bg-green-700"
             }`}
         >
           {eventData.event?.status ? "Close Event" : "Open Event"}

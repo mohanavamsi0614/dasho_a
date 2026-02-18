@@ -1,4 +1,4 @@
-import api from "../lib/api";
+import api from "@/lib/api";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import socket from "@/lib/socket";

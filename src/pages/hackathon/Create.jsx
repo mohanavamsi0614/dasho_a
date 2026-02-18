@@ -1,7 +1,7 @@
 /* global cloudinary */
 /* eslint-disable react/prop-types */
 import { useEffect, useRef, useState } from 'react';
-import api from '../lib/api';
+import api from "@/lib/api";
 import { useNavigate } from 'react-router-dom';
 
 function HackthonForm() {

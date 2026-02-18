@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router";
-import api from "../lib/api";
+import api from "@/lib/api";
 
 function Marks() {
     const eventId = useParams().event;
@@ -153,38 +153,79 @@ function Marks() {
 
             <div className="w-full max-w-full mx-auto space-y-6">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4 p-6 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Marks Management</h1>
-                        <div className="flex items-center gap-3">
-                            <p className="text-gray-400 text-sm">Grading Panel for {eventData?.event?.title || "Hackathon"}</p>
-                            <span className="px-2 py-0.5 rounded-md bg-white/10 text-xs text-gray-300 border border-white/5 font-mono">
-                                Total: {teams.length}
-                            </span>
+                <div className="relative flex flex-col md:flex-row justify-between items-center gap-4 p-8 rounded-3xl bg-[#161616] border border-white/10 shadow-2xl overflow-hidden">
+                    {/* Banner Overlay */}
+                    {eventData?.event?.bannerUrl && (
+                        <div className="absolute inset-0 z-0">
+                            <img src={eventData.event.bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-20 blur-sm" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#161616] via-[#161616]/80 to-transparent" />
                         </div>
-                    </div>
+                    )}
 
-                    <div className="flex bg-black/40 p-1 rounded-xl">
+                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-4 w-full">
+                        <div>
+                            <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Marks Management</h1>
+                            <div className="flex items-center gap-3">
+                                <p className="text-gray-400 text-sm">Grading Panel for {eventData?.event?.title || "Hackathon"}</p>
+                                <span className="px-2 py-0.5 rounded-md bg-white/10 text-xs text-gray-300 border border-white/5 font-mono">
+                                    Total: {teams.length}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="flex bg-black/40 p-1 rounded-xl">
+                            <button
+                                onClick={() => setActiveTab("grading")}
+                                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'grading' ? "bg-indigo-600 text-white shadow-lg" : "text-gray-400 hover:text-white"}`}
+                            >
+                                Grading
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("results")}
+                                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'results' ? "bg-indigo-600 text-white shadow-lg" : "text-gray-400 hover:text-white"}`}
+                            >
+                                Results Table
+                            </button>
+                        </div>
+
                         <button
-                            onClick={() => setActiveTab("grading")}
-                            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'grading' ? "bg-indigo-600 text-white shadow-lg" : "text-gray-400 hover:text-white"}`}
+                            onClick={() => setShowCreateRound(true)}
+                            className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white font-semibold text-sm shadow-lg hover:shadow-emerald-500/20 transition-all active:scale-95"
                         >
-                            Grading
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("results")}
-                            className={`px-6 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${activeTab === 'results' ? "bg-indigo-600 text-white shadow-lg" : "text-gray-400 hover:text-white"}`}
-                        >
-                            Results Table
+                            + Create Round
                         </button>
                     </div>
+                </div>
 
-                    <button
-                        onClick={() => setShowCreateRound(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white font-semibold text-sm shadow-lg hover:shadow-emerald-500/20 transition-all active:scale-95"
-                    >
-                        + Create Round
-                    </button>
+                {/* Stats Row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-[#111]/60 backdrop-blur-md p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center group hover:border-indigo-500/30 transition-all">
+                        <span className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Total Teams</span>
+                        <span className="text-2xl font-bold text-white group-hover:text-indigo-400 transition-colors">{teams.length}</span>
+                    </div>
+                    <div className="bg-[#111]/60 backdrop-blur-md p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center group hover:border-emerald-500/30 transition-all">
+                        <span className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Graded</span>
+                        <span className="text-2xl font-bold text-white group-hover:text-emerald-400 transition-colors">
+                            {teams.filter(t => (t.marks || []).some(m => m.name === selectedRound?.name)).length}
+                        </span>
+                    </div>
+                    <div className="bg-[#111]/60 backdrop-blur-md p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center group hover:border-amber-500/30 transition-all">
+                        <span className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Pending</span>
+                        <span className="text-2xl font-bold text-white group-hover:text-amber-400 transition-colors">
+                            {teams.length - teams.filter(t => (t.marks || []).some(m => m.name === selectedRound?.name)).length}
+                        </span>
+                    </div>
+                    <div className="bg-[#111]/60 backdrop-blur-md p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center group hover:border-purple-500/30 transition-all">
+                        <span className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Avg Score</span>
+                        <span className="text-2xl font-bold text-white group-hover:text-purple-400 transition-colors">
+                            {(() => {
+                                const graded = teams.filter(t => (t.marks || []).some(m => m.name === selectedRound?.name));
+                                if (!graded.length) return "-";
+                                const total = graded.reduce((acc, t) => acc + (t.marks.find(m => m.name === selectedRound.name)?.total || 0), 0);
+                                return (total / graded.length).toFixed(1);
+                            })()}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Round Selector Stripe */}
@@ -194,9 +235,9 @@ function Marks() {
                             <button
                                 key={r.name}
                                 onClick={() => setSelectedRound(r)}
-                                className={`whitespace-nowrap px-4 py-2 rounded-full border transition-all duration-300 text-sm font-medium ${selectedRound?.name === r.name
-                                    ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]"
-                                    : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:border-white/30"
+                                className={`whitespace-nowrap px-6 py-2.5 rounded-full border transition-all duration-300 text-sm font-bold tracking-wide ${selectedRound?.name === r.name
+                                    ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.4)] scale-105"
+                                    : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:border-white/30 hover:text-white"
                                     }`}
                             >
                                 {r.name}
@@ -322,16 +363,18 @@ function Marks() {
                                                 ))}
                                             </div>
 
+
+
                                             <div className="mt-auto flex justify-end gap-4 pt-6 border-t border-white/10">
                                                 <button
                                                     onClick={handleNextTeam}
-                                                    className="px-6 py-3 rounded-xl font-semibold bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all"
+                                                    className="px-6 py-3 rounded-xl font-semibold bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white transition-all border border-white/5 hover:border-white/10"
                                                 >
                                                     Skip to Next
                                                 </button>
                                                 <button
                                                     onClick={handleSubmitMarks}
-                                                    className="px-8 py-3 rounded-xl font-bold bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all"
+                                                    className="px-8 py-3 rounded-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 active:scale-95 transition-all border border-white/10"
                                                 >
                                                     Save Marks
                                                 </button>
@@ -392,17 +435,19 @@ function Marks() {
             </div>
 
             {/* Create Round Popup */}
-            {showCreateRound && (
-                <CreateRoundPopup
-                    setClose={() => setShowCreateRound(false)}
-                    eventId={eventId}
-                    onSuccess={(newRound) => {
-                        setRounds([...rounds, newRound]);
-                        setSelectedRound(newRound);
-                    }}
-                />
-            )}
-        </div>
+            {
+                showCreateRound && (
+                    <CreateRoundPopup
+                        setClose={() => setShowCreateRound(false)}
+                        eventId={eventId}
+                        onSuccess={(newRound) => {
+                            setRounds([...rounds, newRound]);
+                            setSelectedRound(newRound);
+                        }}
+                    />
+                )
+            }
+        </div >
     );
 }
 
@@ -455,11 +500,13 @@ function CreateRoundPopup({ setClose, eventId, onSuccess }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="bg-[#111] border border-white/10 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="p-6 border-b border-white/10 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div className="bg-[#111]/90 backdrop-blur-xl border border-white/10 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
                     <h2 className="text-xl font-bold text-white">Create New Round</h2>
-                    <button onClick={setClose} className="text-gray-400 hover:text-white">✕</button>
+                    <button onClick={setClose} className="text-gray-400 hover:text-white transition-colors bg-white/5 hover:bg-white/20 rounded-full p-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                 </div>
 
                 <div className="p-6 space-y-6">

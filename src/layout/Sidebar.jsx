@@ -1,17 +1,20 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, CheckSquare, CreditCard, RefreshCw, Menu, X, Home, BrainIcon } from "lucide-react";
+import { LayoutDashboard, CheckSquare, CreditCard, RefreshCw, Menu, X, Home, BrainIcon, icons, QrCodeIcon } from "lucide-react";
 import { useState } from "react";
+import path from "path";
 
 const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(false);
 
     const navItems = [
-        { path: ".", label: "Dashboard", icon: Home, end: true },
+        { path: ".", label: "event", icon: Home, end: true },
+        { path: "dashboard", label: "Dashboard", icon: Home },
         { path: "attd", label: "Attendance", icon: CheckSquare },
         { path: "marks", label: "Marks", icon: LayoutDashboard },
         { path: "payment", label: "Payment", icon: CreditCard },
         { path: "update", label: "Update", icon: RefreshCw },
         { path: "problem-statements", label: "Problem Statement", icon: BrainIcon },
+        { path: 'scanner', label: "Scanner", icon: QrCodeIcon }
     ];
 
     return (

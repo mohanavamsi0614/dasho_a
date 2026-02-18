@@ -1,5 +1,5 @@
 import socket from "@/lib/socket";
-import api from "../lib/api";
+import api from "@/lib/api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { Check, X, Plus, Image as ImageIcon, Search, ChevronRight, User, Shield, CameraOff, Clock, Users } from "lucide-react";
@@ -252,6 +252,7 @@ function HackAttd() {
                       const status = p?.attd?.[currAttd]?.status;
                       const img = p?.attd?.[currAttd]?.img;
                       const isPresent = status === 'Present';
+                      const loc = p?.attd?.[currAttd]?.loc
 
                       return (
                         <tr key={`${team._id}-${pIdx}`} className="hover:bg-white/[0.02] transition-colors print:hover:bg-transparent">
@@ -287,6 +288,8 @@ function HackAttd() {
                             ) : (
                               <span className="text-xs text-gray-600 italic">No Proof</span>
                             )}
+
+
                           </td>
                         </tr>
                       );
@@ -315,69 +318,79 @@ function HackAttd() {
       </div>
 
       {/* Header & Session Selector */}
-      <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-4 mb-6 p-4 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-lg">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-              Attendance
-            </h1>
-            <span className="px-2 py-0.5 rounded-md bg-white/10 text-xs text-gray-300 border border-white/5 font-mono">
-              Total: {teams.length}
-            </span>
+      <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-4 mb-6 p-6 rounded-3xl bg-[#161616] border border-white/10 shadow-2xl overflow-hidden">
+        {/* Banner Overlay */}
+        {eventData?.bannerUrl && (
+          <div className="absolute inset-0 z-0">
+            <img src={eventData.bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-20 blur-sm" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#161616] via-[#161616]/80 to-transparent" />
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <div className={`w-2 h-2 rounded-full ${currAttd === activeAttd ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-            <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">
-              {currAttd === activeAttd ? "Live Instance" : "Offline"}
-            </p>
+        )}
+
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center w-full gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+                Attendance
+              </h1>
+              <span className="px-2 py-0.5 rounded-md bg-white/10 text-xs text-gray-300 border border-white/5 font-mono">
+                Total: {teams.length}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 mt-1">
+              <div className={`w-2 h-2 rounded-full ${currAttd === activeAttd ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+              <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">
+                {currAttd === activeAttd ? "Live Instance" : "Offline"}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 bg-black/20 p-1.5 rounded-full border border-white/5 overflow-x-auto max-w-full scrollbar-hide">
-          {eventData?.attd?.map((session) => (
-            <button
-              key={session}
-              onClick={() => {
-                localStorage.setItem("recentAttd", session)
-                setCurrAttd(session)
-              }}
-              className={`px-5 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap ${currAttd === session
-                ? "bg-white text-black shadow-[0_2px_10px_rgba(255,255,255,0.2)]"
-                : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
-            >
-              {session}
-            </button>
-          ))}
-          <button
-            onClick={handleCreateAttd}
-            className="ml-2 w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white border border-emerald-500/20 flex items-center justify-center transition-all"
-            title="Create New Session"
-          >
-            <Plus size={16} />
-          </button>
-        </div>
-
-        <div>
-          {currAttd && (
-            <div className="flex gap-2">
+          <div className="flex items-center gap-2 bg-black/20 p-1.5 rounded-full border border-white/5 overflow-x-auto max-w-full scrollbar-hide">
+            {eventData?.attd?.map((session) => (
               <button
-                onClick={() => setViewMode("report")}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
-              >
-                View Report
-              </button>
-              <button
-                onClick={() => handleSessionToggle(currAttd === activeAttd ? "close" : "open", currAttd)}
-                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border shadow-lg ${currAttd === activeAttd
-                  ? "bg-green-500 text-black border-green-400 hover:bg-green-400 shadow-green-500/20"
-                  : "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20"
+                key={session}
+                onClick={() => {
+                  localStorage.setItem("recentAttd", session)
+                  setCurrAttd(session)
+                }}
+                className={`px-5 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap ${currAttd === session
+                  ? "bg-white text-black shadow-[0_2px_10px_rgba(255,255,255,0.2)]"
+                  : "text-gray-400 hover:text-white hover:bg-white/5"
                   }`}
               >
-                {currAttd === activeAttd ? "Stop Session" : "Start Session"}
+                {session}
               </button>
-            </div>
-          )}
+            ))}
+            <button
+              onClick={handleCreateAttd}
+              className="ml-2 w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white border border-emerald-500/20 flex items-center justify-center transition-all"
+              title="Create New Session"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
+
+          <div>
+            {currAttd && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setViewMode("report")}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+                >
+                  View Report
+                </button>
+                <button
+                  onClick={() => handleSessionToggle(currAttd === activeAttd ? "close" : "open", currAttd)}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border shadow-lg ${currAttd === activeAttd
+                    ? "bg-green-500 text-black border-green-400 hover:bg-green-400 shadow-green-500/20"
+                    : "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20"
+                    }`}
+                >
+                  {currAttd === activeAttd ? "Stop Session" : "Start Session"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -556,6 +569,18 @@ function HackAttd() {
 function MemberRow({ member, role, idx, currAttd, onUpdate, teamId, setViewImage, allSessions }) {
   return (
     <div className="bg-white/[0.03] p-4 rounded-2xl border border-white/5 hover:border-white/10 transition-all hover:bg-white/[0.05] group">
+      <div className=" border p-0.5 rounded-md mb-1 text-white bg-yellow-600/30">
+        {member.attd?.[currAttd]?.loc ? (
+          <div className=" w-full">
+            {member.attd?.[currAttd]?.loc.lang}
+            {member.attd?.[currAttd]?.loc.lat}
+            {member.attd?.[currAttd]?.loc.name}
+          </div>
+        )
+          :
+          (<div>Not Available</div>)}
+      </div>
+
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-4 w-full sm:w-auto">
           <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-bold text-white shadow-inner ${role === "Lead"
@@ -565,6 +590,7 @@ function MemberRow({ member, role, idx, currAttd, onUpdate, teamId, setViewImage
             {role === "Lead" ? "L" : idx}
           </div>
           <div>
+
             <div className="flex items-center gap-2">
               <p className="font-bold text-lg text-gray-200">{member.name}</p>
               {role === "Lead" && <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/20 text-[10px] font-bold uppercase">LEAD</span>}
@@ -598,6 +624,7 @@ function AttendanceActions({ member, currAttd, onUpdate, setViewImage, allSessio
 
   return (
     <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
+
       {/* Reference Images from Previous Sessions */}
       {prevImages.length > 0 && (
         <div className="flex items-center -space-x-2 mr-2 px-2 border-r border-white/10">
@@ -625,12 +652,14 @@ function AttendanceActions({ member, currAttd, onUpdate, setViewImage, allSessio
           <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/20 transition-colors flex items-center justify-center">
             <ImageIcon size={16} className="text-white opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md" />
           </div>
+
         </div>
       ) : (
         <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center group/noimg cursor-default" title="No Proof Available">
           <CameraOff size={18} className="text-gray-600 group-hover/noimg:text-gray-500 transition-colors" />
         </div>
       )}
+
 
       <div className="flex bg-black/40 rounded-xl p-1 border border-white/10 shadow-inner">
         <button
