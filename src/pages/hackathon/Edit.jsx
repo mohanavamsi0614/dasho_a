@@ -115,15 +115,13 @@ function HackathonEdit() {
         if (Number(data.minTeams) > Number(data.maxTeams)) return alert('minTeams cannot exceed maxTeams');
         if (data.cost > 0 && data.payments.length === 0) return alert('Please provide payment details');
 
-        // Payload for update
         const payload = { ...data };
 
-        // Remove backend-specific fields that shouldn't be sent back if they are in the object
         delete payload._id;
         delete payload.createdAt;
         delete payload.updatedAt;
         delete payload.__v;
-        delete payload.orgId; // Usually kept, but ensuring cleaner update
+        delete payload.orgId;
 
         try {
             await api.put(`/admin/event/${event}`, payload);

@@ -23,7 +23,21 @@ function HackAttd() {
   useEffect(() => {
     fetchData();
     socket.emit("join", event);
+
   }, [event]);
+
+  useEffect(() => {
+    const handleAttd = (data) => {
+      setTeams(prevTeams => prevTeams.map(t => {
+        if (t._id !== data._id) return t;
+        return data;
+      }));
+    };
+    socket.on("attd", handleAttd);
+    return () => {
+      socket.off("attd", handleAttd);
+    };
+  }, []);
 
   useEffect(() => {
     getStats()
@@ -34,6 +48,7 @@ function HackAttd() {
       console.log("Current session updated:", id);
       setActiveAttd(id);
     });
+
 
     return () => {
       socket.off("currAttd");
@@ -47,6 +62,9 @@ function HackAttd() {
         eventOg: res.data.event_og,
         fullData: res.data
       });
+      for (let team of res.data.event_og) {
+        socket.emit("join", `admin-${team._id}`)
+      }
       setEventData(res.data.event);
       setTeams(res.data.event_og || []);
       setActiveAttd(res.data.event.currAttd);
@@ -78,7 +96,6 @@ function HackAttd() {
     console.log(currAttd)
     teams.forEach(t => {
       t.lead.attd?.[currAttd]?.status === "Present" ? present++ : absent++;
-      console.log(t.lead.attd?.[currAttd]?.status)
       t.members.forEach(m => {
         m.attd?.[currAttd]?.status === "Present" ? present++ : absent++;
       });
@@ -253,7 +270,6 @@ function HackAttd() {
                       const img = p?.attd?.[currAttd]?.img;
                       const isPresent = status === 'Present';
                       const loc = p?.attd?.[currAttd]?.loc
-
                       return (
                         <tr key={`${team._id}-${pIdx}`} className="hover:bg-white/[0.02] transition-colors print:hover:bg-transparent">
                           <td className="p-4 text-xs text-gray-600 font-mono">{tIdx + 1}.{pIdx + 1}</td>
